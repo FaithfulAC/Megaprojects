@@ -1,0 +1,280 @@
+getgenv().europa = {
+	getcs = function()
+		return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
+	end,
+	checkvar = function(method, str)
+		method = method:gsub("^%u", string.lower)
+		str = str:gsub("^%u", string.lower)
+		return method == str or (method:find(str) and method:sub(1, str:len()+1) == str .. "\000")
+	end,
+	getrh = function()
+		if Krnl then
+			if #getconnections(game.DescendantAdded) > 0 then
+				return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
+			else
+				return gethui()
+			end
+		elseif identifyexecutor():lower():find("fluxus") then
+			if gethui() ~= game:GetService("CoreGui") then
+				return gethui()
+			else
+				return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
+			end
+		elseif gethui then
+			return gethui()
+		else
+			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
+		end
+	end,
+	hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
+		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
+		
+		local gh1;gh1=hookmetamethod(game,"__namecall", function(self,...)
+			local method = getnamecallmethod():gsub("^%u", string.lower)
+			if not checkcaller() and self == pgui and method == "getGuiObjectsAtPosition" then
+				return 1
+			end
+			return gh1(self,...)
+		end)
+		local gh2;gh2=hookfunction(pgui.GetGuiObjectsAtPosition, function(arg,...)
+			if not checkcaller() and arg == pgui then
+				return 1
+			end
+			return gh1(arg,...)
+		end)
+	end,
+	hookgcinfo = if not hookfunction then nil else function()
+		local mini = 1000
+		local max = 2000
+
+		local num = if gcinfo() < max and gcinfo() > mini then math.random(mini - 18, mini + 24) else gcinfo()
+
+		task.spawn(function()
+			while game:GetService("RunService").RenderStepped:Wait() do
+				if gcinfo() > max then max = gcinfo() end
+				if gcinfo() < mini then mini = gcinfo() end
+				local int = math.random(4, 8)
+				if num < max - math.random(10,30) then num += int/2 game.ItemChanged:Wait() num += math.random(2) else
+					num = math.random(mini - 18, mini + 24)
+					game.ItemChanged:Wait()
+					num += 1
+				end
+			end
+		end)
+		local h;h=hookfunction(getrenv().gcinfo, function(...)
+			if not checkcaller() then return num end
+			return h(...)
+		end)
+		local h2;h2=hookfunction(getrenv().collectgarbage, function(cnt,...)
+			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\000") then
+				return num
+			end
+			return h2(cnt,...)
+		end)
+	end,
+	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
+		local stats = game:GetService("Stats")
+		local ret = stats:GetTotalMemoryUsageMb()
+		task.spawn(function()
+			while game:GetService("RunService").RenderStepped:Wait() do
+				ret += math.random(-1,1)/8
+				task.wait(math.random(1,3)/30)
+			end
+		end)
+		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
+			local method = getnamecallmethod():gsub("^%u", string.lower)
+			if not checkcaller() and self == stats and method == "getTotalMemoryUsageMb" then
+				return ret
+			end
+			return h1(self,...)
+		end)
+		local h2;h2=hookfunction(stats.GetTotalMemoryUsageMb, function(a,...)
+			if not checkcaller() and a == stats then
+				return ret
+			end
+			return h2(a,...)
+		end)
+	end,
+	disconn = function(conn)
+		for i, v in next, getconnections(conn) do
+			v:Disable()
+		end
+	end,
+	securedisconn = function(conn) -- basically a hook lol
+		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
+			if not checkcaller() and self == conn and (getnamecallmethod():lower() == "wait" or getnamecallmethod():lower() == "connect") then
+				return wait(9e9)
+			end
+			return h1(self,...)
+		end)
+		local h2;h2=hookfunction(conn.Wait, function(a,...)
+			if not checkcaller() and a == conn then
+				return wait(9e9)
+			end
+			return h2(a,...)
+		end)	
+		local h3;h3=hookfunction(conn.Connect, function(a,b,...)
+			if not checkcaller() and a == conn and type(b) == "function" then
+				return wait(9e9)
+			end
+			return h2(a,b,...)
+		end)	
+	end,
+	antiweaktable = function() -- not tested lol
+		for i, v in getgc(true) do
+			if type(v) == "table" and getmetatable(v) and getmetatable(v)["__mode"] == "v" then
+				local newmeta = getmetatable(v)
+				newmeta.__mode = nil
+				setmetatable(v, newmeta)
+				if table.find(v, {}) then
+					v = {}
+				end
+			end
+		end
+	end,
+	getscripts = function()
+		local tbl = {}
+		for i, v in getinstances() do
+			if v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
+				table.insert(tbl, v)
+			end
+		end
+		return tbl
+	end,
+	isnil = function(a)
+		return a.Parent == nil
+	end,
+	antikick = if not (hookmetamethod and hookfunction) then nil else function()
+		local plr = game:GetService("Players").LocalPlayer
+		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
+			if not checkcaller() and self == plr and getnamecallmethod():lower() == "kick" then
+				return wait(9e9)
+			end
+			return h1(self,...)
+		end)
+		local h2;h2=hookfunction(game:GetService("Players").LocalPlayer.Kick, function(a,...)
+			if not checkcaller() and a == plr then
+				return wait(9e9)
+			end
+			return h2(a,...)
+		end)
+	end,
+	anticrash = function()
+		return game:GetService("ScriptContext"):SetTimeout(1)
+	end,
+	hookfs = if not (hookmetamethod and hookfunction) then nil else function(rem)
+		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
+			local method = getnamecallmethod():gsub("^%u", string.lower)
+			if not checkcaller() and method == "fireServer" then
+				return wait(9e9)
+			end
+			return h1(self,...)
+		end)
+		local h2;h2=hookfunction(rem.FireServer, function(a,...)
+			if not checkcaller() and a == rem then
+				return wait(9e9)
+			end
+			return h2(a,...)
+		end)
+	end,
+	hookis = if not (hookmetamethod and hookfunction) then nil else function(rem)
+		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
+			local method = getnamecallmethod():gsub("^%u", string.lower)
+			if not checkcaller() and method == "invokeServer" then
+				return wait(9e9)
+			end
+			return h1(self,...)
+		end)
+		local h2;h2=hookfunction(rem.InvokeServer, function(a,...)
+			if not checkcaller() and a == rem then
+				return wait(9e9)
+			end
+			return h2(a,...)
+		end)
+	end,
+	ls = function(url)
+		return loadstring(game:HttpGet(url))
+	end,
+	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name, objtoreturn)
+		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
+			local method = getnamecallmethod():gsub("^%u", string.lower)
+			if not checkcaller() and self == game and method == "getService" then
+				return objtoreturn or wait(9e9)
+			end
+			return h1(self,...)
+		end)
+		local h2;h2=hookfunction(game.GetService, function(a,b,...)
+			if not checkcaller() and a == game and b == name then
+				return objtoreturn or wait(9e9)
+			end
+			return h2(a,b,...)
+		end)
+	end,
+	antihumcheck = function()
+		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		for i, v in next, getconnections(hum.Changed) do
+			v:Disable()
+		end
+		for i, v in next, getconnections(hum:GetPropertyChangedSignal("WalkSpeed")) do
+			v:Disable()
+		end
+		for i, v in next, getconnections(hum:GetPropertyChangedSignal("JumpPower")) do
+			v:Disable()
+		end
+		for i, v in next, getconnections(hum:GetPropertyChangedSignal("HipHeight")) do
+			v:Disable()
+		end
+		for i, v in next, getconnections(hum:GetPropertyChangedSignal("JumpHeight")) do
+			v:Disable()
+		end
+	end,
+	setnoclip = function(bool)
+		if not bool then
+			if noclipconn then
+				noclipconn:Disconnect()
+			end
+			getgenv().noclipconn = nil
+			return
+		end
+		getgenv().noclipconn = noclipconn or game:GetService("RunService").Stepped:Connect(function()
+			pcall(function()
+				for i, v in pairs(game:GetService("Players").LocalPlayer.Character:GetChildren()) do
+					if v:IsA("BasePart") then v.CanCollide = false end
+				end
+			end)
+		end)
+	end,
+	loadiy = function()
+		return loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
+	end,
+	loadcmdx = function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source", true))()
+	end,
+	loaddex = function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
+	end,
+	loadss = function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))
+	end,
+	loadv4 = function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))
+	end,
+}
+europa["getcoresecure"] = europa.getcs
+europa["checkvariable"] = europa.checkvar
+europa["getrealhidden"] = europa.getrh
+europa["hookmemory"] = europa.hookmem
+europa["isnilinstance"] = europa.isnil
+europa["disconnect"] = europa.disconn
+europa["securedisconnect"] = europa.securedisconn
+europa["hookfireserver"] = europa.hookfs
+europa["hookinvokeserver"] = europa.hookis
+europa["hookgetservice"] = europa.hookgs
+europa["antihumanoidcheck"] = europa.antihumcheck
+europa["loadinfiniteyield"] = europa.loadiy
+europa["loadsimplespy"] = europa.loadss
+europa["loadvapev4"] = europa.loadv4
+
+for i, v in europa do
+	getgenv()[i] = v
+end
