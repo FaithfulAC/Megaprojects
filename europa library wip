@@ -43,6 +43,20 @@ getgenv().europa = {
 			return gh1(arg,...)
 		end)
 	end,
+	hookggoap2 = if not (hookmetamethod and hookfunction) then nil else function()
+		local guis = game:GetService("GuiService")
+		for i, v in next, getconnections(guis.MenuClosed) do
+			v:Disable()
+		end
+		local h;h=hookmetamethod(game,"__index", function(self,arg,...)
+			local _arg = arg:gsub("^%u", string.upper)
+			_arg:gsub("\000", "")
+			if not checkcaller() and self == guis and _arg == "MenuIsOpen" then
+				return true
+			end
+			return h(self,arg,...)
+		end)
+	end,
 	hookgcinfo = if not hookfunction then nil else function()
 		local mini = 1000
 		local max = 2000
@@ -100,7 +114,7 @@ getgenv().europa = {
 			v:Disable()
 		end
 	end,
-	securedisconn = function(conn) -- basically a hook lol
+	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn) -- basically a hook lol
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
 			if not checkcaller() and self == conn and (getnamecallmethod():lower() == "wait" or getnamecallmethod():lower() == "connect") then
 				return wait(9e9)
@@ -120,7 +134,7 @@ getgenv().europa = {
 			return h2(a,b,...)
 		end)	
 	end,
-	antiweaktable = function()
+	antiweaktable = if not getgc then nil else function()
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and getmetatable(v)["__mode"] == "v" then
 				local newmeta = getmetatable(v)
@@ -140,7 +154,7 @@ getgenv().europa = {
 			end
 		end
 	end,
-	getscripts = function()
+	getscripts = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
 			if v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
@@ -148,6 +162,35 @@ getgenv().europa = {
 			end
 		end
 		return tbl
+	end,
+	getrems = if not getinstances then nil else function()
+		local tbl = {}
+		for i, v in getinstances() do
+			if v:IsA("RemoteEvent") then
+				table.insert(tbl, v)
+			end
+		end
+		return tbl
+	end,
+	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem) -- local a = {grabargs(rem)}
+		local args = nil
+		local h;h=hookfunction(rem.FireServer, function(...)
+			args = {...}
+			return h(...)
+		end)
+		local h2;h2=hookfunction(rem.InvokeServer, function(...)
+			args = {...}
+			return h(...)
+		end)
+		local h3;h3=hookmetamethod(game,"__namecall", function(self,...)
+			local method = getnamecallmethod():gsub("^%u", string.upper)
+			if self == rem and (method == "InvokeServer" or method == "FireServer") then
+				args = {...}
+			end
+			return h3(self,...)
+		end)
+		while args == nil and task.wait(.1) do end
+		return unpack(args)
 	end,
 	isnil = function(a)
 		return a.Parent == nil
@@ -203,6 +246,21 @@ getgenv().europa = {
 	ls = function(url)
 		return loadstring(game:HttpGet(url))
 	end,
+	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
+		local stats = game:GetService("Stats")
+		local org = stats.InstanceCount
+		task.spawn(function()
+			while task.wait(.1) do
+				org += math.random(-2, 5)
+			end
+		end)
+		local h1;h1=hookmetamethod(game,"__index", function(self,arg,...)
+			if not checkcaller() and self == stats and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\000") then
+				return org
+			end
+			return h1(self,...)
+		end)
+	end,
 	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name, objtoreturn)
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.lower)
@@ -218,7 +276,45 @@ getgenv().europa = {
 			return h2(a,b,...)
 		end)
 	end,
-	antihumcheck = function()
+	waithookfunc = if not hookfunction then nil else function(fnc)
+		local h;h=hookfunction(fnc, function(...)
+			if not checkcaller() then
+				return wait(9e9)
+			end	
+			return h(...)
+		end)
+	end,
+	hookfunc = if not hookfunction then nil else function(fnc, valtoreturn)
+		local h;h=hookfunction(fnc, function(...)
+			if not checkcaller() then
+				return valtoreturn
+			end
+			return h(...)
+		end)
+	end,
+	antibodycheck = function()
+		local char = game:GetService("Players").LocalPlayer.Character
+		local root, torso do
+			if char then root = char:FindFirstChild("HumanoidRootPart") torso = char:FindFirstChild("Torso") end
+		end
+		for i, v in next, getconnections(char.DescendantAdded) do
+			v:Disable()
+		end
+		local function dothing(obj)
+			for i, v in next, getconnections(obj.ChildAdded) do
+				v:Disable()
+			end
+			for i, v in next, getconnections(obj.DescendantAdded) do
+				v:Disable()
+			end
+			for i, v in next, getconnections(obj.Changed) do
+				v:Disable()
+			end
+		end
+		if root then dothing(root) end
+		if torso then dothing(torso) end
+	end,
+	antihumcheck = function() -- can interfere with looping walkspeed
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		for i, v in next, getconnections(hum.Changed) do
 			v:Disable()
@@ -252,6 +348,34 @@ getgenv().europa = {
 			end)
 		end)
 	end,
+	setws = function(int, loopHum)
+		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		if hum and loopHum then
+			if getgenv().wsloop then
+				getgenv().wsloop:Disconnect()
+			end
+			getgenv().wsloop = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+				hum.WalkSpeed = int
+			end)
+		end
+		hum.WalkSpeed = int
+	end,
+	setjp = function(int, loopHum)
+		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		if hum and loopHum then
+			if getgenv().jploop then
+				getgenv().jploop:Disconnect()
+			end
+			getgenv().jploop = hum:GetPropertyChangedSignal("JumpPower"):Connect(function()
+				hum.JumpPower = int
+			end)
+		end
+		hum.JumpPower = int
+	end,
+	setjpenabled = function(bool)
+		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		if hum then hum.UseJumpPower = bool end
+	end,
 	loadiy = function()
 		return loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
 	end,
@@ -272,13 +396,19 @@ europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
 europa["getrealhidden"] = europa.getrh
 europa["hookmemory"] = europa.hookmem
+europa["getremotes"] = europa.getrems
 europa["isnilinstance"] = europa.isnil
 europa["disconnect"] = europa.disconn
 europa["securedisconnect"] = europa.securedisconn
 europa["hookfireserver"] = europa.hookfs
 europa["hookinvokeserver"] = europa.hookis
 europa["hookgetservice"] = europa.hookgs
+europa["hookinstancecount"] = europa.hookinscount
+europa["waithookfunction"] = europa.waithookfunc
 europa["antihumanoidcheck"] = europa.antihumcheck
+europa["setwalkspeed"] = europa.setws
+europa["setjumppower"] = europa.setjp
+europa["setjumppowerenabled"] = europa.setjpenabled
 europa["loadinfiniteyield"] = europa.loadiy
 europa["loadsimplespy"] = europa.loadss
 europa["loadvapev4"] = europa.loadv4
