@@ -15,7 +15,7 @@ getgenv().europa = {
 				return gethui()
 			end
 		elseif identifyexecutor():lower():find("fluxus") then
-			if gethui() ~= game:GetService("CoreGui") then
+			if gethui() ~= game:GetService("CoreGui") then -- [[ (._.) ]]
 				return gethui()
 			else
 				return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
@@ -28,7 +28,7 @@ getgenv().europa = {
 	end,
 	hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
 		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
-
+		
 		local gh1;gh1=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.lower)
 			if not checkcaller() and self == pgui and method == "getGuiObjectsAtPosition" then
@@ -120,14 +120,22 @@ getgenv().europa = {
 			return h2(a,b,...)
 		end)	
 	end,
-	antiweaktable = function() -- not tested lol
+	antiweaktable = function()
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and getmetatable(v)["__mode"] == "v" then
 				local newmeta = getmetatable(v)
 				newmeta.__mode = nil
 				setmetatable(v, newmeta)
-				if table.find(v, {}) then
+				if table.find(v, {}) or table.find(v, game:GetService("CoreGui")) then
 					v = {}
+					setmetatable(v, {
+						__index = function()
+							return wait(9e9)
+						end,
+						__newindex = function()
+							return wait(9e9)
+						end
+					})
 				end
 			end
 		end
@@ -254,10 +262,10 @@ getgenv().europa = {
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
 	end,
 	loadss = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
 	end,
 	loadv4 = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))()
 	end,
 }
 europa["getcoresecure"] = europa.getcs
