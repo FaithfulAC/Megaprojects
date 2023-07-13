@@ -109,6 +109,82 @@ getgenv().europa = {
 			return h2(a,...)
 		end)
 	end,
+	setmeminflation = function(bool)
+		local memconn = getgenv().meminflateconn
+		if bool == false then
+			if memconn then memconn:Disconnect() getgenv().meminflateconn = nil end
+			return
+		end
+		getgenv().meminflateconn = game:GetService("RunService").Stepped:Connect(function()
+			for i = 1, 10 do
+				local part = Instance.new("Part")
+				local orient = Vector3.new(math.random(1, 360000)/100, math.random(1, 360000)/100, math.random(1, 360000)/100)
+				part.Size = Vector3.new(100,100,100)
+				part.Orientation = orient
+				part.Position = orient + Vector3.new(0,100,0)
+				part.Anchored = true
+				part.Parent = workspace
+				part:Destroy()
+			end
+		end)
+	end,
+	setmemtaginflation = function(bool, enum) -- only supports script and gui lol (default is gui)
+		local scrfunc = getgenv().memtagscriptfunc
+		local guifunc = getgenv().memtagguifunc
+		if bool == false then
+			if scrfunc then scrfunc:Disconnect() getgenv().memtagscriptfunc = nil end
+			if guifunc then guifunc:Disconnect() getgenv().memtagguifunc = nil end
+			return
+		end
+		if enum == Enum.DeveloperMemoryTag.Script then
+			if scrfunc then return end
+			getgenv().memtagscriptfunc =  game:GetService("RunService").Heartbeat:Connect(function()
+				task.spawn(function(...) -- doing random stuff to increase script activity
+					for i = 1, 5 do
+						local a = Instance.new("Script")
+						a.Enabled = false
+						a.Disabled = false
+						a:Destroy()
+					end
+					for i, v in pairs(workspace:GetDescendants()) do pcall(v.SetAttribute) end
+				end)
+			end)
+		else -- gui or default (gui)
+			if guifunc then return end
+			getgenv().memtagguifunc = game:GetService("RunService").Heartbeat:Connect(function()
+				for i = 1, 10 do
+					local frame = Instance.new("Frame", game:GetService("CoreGui").RobloxGui)
+					frame.Size = UDim2.new(2,0,2,0)
+					frame.Position = UDim2.new(5,0,5,0)
+					frame:Destroy()
+				end
+			end)
+		end
+	end,
+	setgcinflation = function(bool)
+		local tbl = getgenv().gcinflationtable
+		if bool == false then
+			if tbl then getgenv().gcinflationtable = nil end
+			return
+		end
+		getgenv().gcinflationtable = {}
+		task.spawn(function()
+			while getgenv().gcinflationtable do
+				for i = 1, math.random(100,200) do
+					table.insert(getgenv().gcinflationtable or {}, (function()
+						local str = ""
+						for i = 1, math.random(10,20) do
+							str = str .. string.char(math.random(32, 126))
+						end
+						return str
+					end)())
+					task.wait()
+				end
+				table.clear(getgenv().gcinflationtable or {})
+				task.wait(2)
+			end
+		end)
+	end,
 	disconn = function(conn)
 		for i, v in next, getconnections(conn) do
 			v:Disable()
@@ -151,6 +227,15 @@ getgenv().europa = {
 						end
 					})
 				end
+			end
+		end
+	end,
+	antitostring = if not getgc then nil else function()
+		for i, v in getgc(true) do
+			if type(v) == "table" and getmetatable(v) and getmetatable(v)["__tostring"] then
+				local newmeta = getmetatable(v)
+				newmeta.__tostring = nil
+				setmetatable(v, newmeta)
 			end
 		end
 	end,
@@ -379,6 +464,13 @@ getgenv().europa = {
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum then hum.UseJumpPower = bool end
 	end,
+	sethh = function(int)
+		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		if hum then hum.HipHeight = int end
+	end,
+	setgrav = function(int)
+		workspace.Gravity = int
+	end,
 	loadiy = function()
 		return loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
 	end,
@@ -401,6 +493,8 @@ europa["getrealhidden"] = europa.getrh
 europa["hookmemory"] = europa.hookmem
 europa["getremotes"] = europa.getrems
 europa["isnilinstance"] = europa.isnil
+europa["setmemoryinflation"] = europa.setmeminflation -- [[nmyr]]
+europa["setmemorytaginflation"] = europa.setmemtaginflation -- [[nmyr]]
 europa["disconnect"] = europa.disconn
 europa["securedisconnect"] = europa.securedisconn
 europa["hookfireserver"] = europa.hookfs
@@ -411,6 +505,9 @@ europa["waithookfunction"] = europa.waithookfunc
 europa["antihumanoidcheck"] = europa.antihumcheck
 europa["setwalkspeed"] = europa.setws
 europa["setjumppower"] = europa.setjp
+europa["sethipheight"] = europa.sethh -- [[nmyr]]
+europa["setmaxslopeangle"] = europa.setmsa -- [[nmyr]]
+europa["setgravity"] = europa.setgrav -- [[nmyr]]
 europa["setjumppowerenabled"] = europa.setjpenabled
 europa["loadinfiniteyield"] = europa.loadiy
 europa["loadsimplespy"] = europa.loadss
