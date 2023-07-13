@@ -263,21 +263,16 @@ getgenv().europa = {
 			args = {...}
 			return h(...)
 		end)
-		local h2;h2=hookfunction(rem.InvokeServer, function(...)
-			args = {...}
-			return h2(...)
-		end)
-		local h3;h3=hookmetamethod(game,"__namecall", function(self,...)
+		local h2;h2=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.upper)
-			if self == rem and (method == "InvokeServer" or method == "FireServer") then
+			if self == rem and method == "FireServer" then
 				args = {...}
 			end
 			return h3(self,...)
 		end)
 		while args == nil and task.wait(.1) do end
 		h=hookfunction(rem.FireServer, function(...) return h(...) end)
-		h2=hookfunction(rem.InvokeServer, function(...) return h2(...) end)
-		h3=hookmetamethod(game,"__namecall", function(self,...) return h3(self,...) end)
+		h2=hookmetamethod(game,"__namecall", function(self,...) return h3(self,...) end)
 		return unpack(args)
 	end,
 	isnil = function(a)
