@@ -1,4 +1,8 @@
 getgenv().europa = {
+	Players = game:GetService("Players"),
+	LocalPlayer = game:GetService("Players").LocalPlayer,
+	Stats = game:GetService("Stats"),
+	ReplicatedFirst = game:GetService("ReplicatedFirst"),
 	getcs = function()
 		return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 	end,
@@ -14,13 +18,7 @@ getgenv().europa = {
 			else
 				return gethui()
 			end
-		elseif identifyexecutor():lower():find("fluxus") then
-			if gethui() ~= game:GetService("CoreGui") then -- [[ (._.) ]]
-				return gethui()
-			else
-				return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
-			end
-		elseif gethui then
+		elseif gethui and gethui() ~= game:GetService("CoreGui") then -- [[ (._.) ]]
 			return gethui()
 		else
 			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
@@ -62,11 +60,17 @@ getgenv().europa = {
 		local max = 2000
 
 		local num = if gcinfo() < max and gcinfo() > mini then math.random(mini - 18, mini + 24) else gcinfo()
-
+		
 		task.spawn(function()
-			while game:GetService("RunService").RenderStepped:Wait() do
+			for i = 1, 5 do
 				if gcinfo() > max then max = gcinfo() end
 				if gcinfo() < mini then mini = gcinfo() end
+				task.wait()
+			end
+		end)
+		
+		task.spawn(function()
+			while game:GetService("RunService").RenderStepped:Wait() do
 				local int = math.random(4, 8)
 				if num < max - math.random(10,30) then num += int/2 game.ItemChanged:Wait() num += math.random(2) else
 					num = math.random(mini - 18, mini + 24)
@@ -85,6 +89,12 @@ getgenv().europa = {
 			end
 			return h2(cnt,...)
 		end)
+	end,
+	getmem = function()
+		return game:GetService("Stats"):GetTotalMemoryUsageMb()
+	end,
+	getmemtag = function(enum)
+		game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
 	end,
 	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
 		local stats = game:GetService("Stats")
@@ -118,12 +128,13 @@ getgenv().europa = {
 		getgenv().meminflateconn = game:GetService("RunService").Stepped:Connect(function()
 			for i = 1, 10 do
 				local part = Instance.new("Part")
+				part.Parent = workspace
+				
 				local orient = Vector3.new(math.random(1, 360000)/100, math.random(1, 360000)/100, math.random(1, 360000)/100)
 				part.Size = Vector3.new(100,100,100)
 				part.Orientation = orient
 				part.Position = orient + Vector3.new(0,100,0)
 				part.Anchored = true
-				part.Parent = workspace
 				part:Destroy()
 			end
 		end)
@@ -270,7 +281,7 @@ getgenv().europa = {
 			end
 			return h3(self,...)
 		end)
-		while args == nil and task.wait(.1) do end
+		while args == nil and task.wait() do end
 		h=hookfunction(rem.FireServer, function(...) return h(...) end)
 		h2=hookmetamethod(game,"__namecall", function(self,...) return h3(self,...) end)
 		return unpack(args)
@@ -327,7 +338,7 @@ getgenv().europa = {
 		end)
 	end,
 	ls = function(url)
-		return loadstring(game:HttpGet(url))
+		return loadstring(game:HttpGet(url))()
 	end,
 	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
 		local stats = game:GetService("Stats")
@@ -341,7 +352,7 @@ getgenv().europa = {
 			if not checkcaller() and self == stats and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\000") then
 				return org
 			end
-			return h1(self,...)
+			return h1(self,arg,...)
 		end)
 	end,
 	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name, objtoreturn)
@@ -485,11 +496,13 @@ getgenv().europa = {
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
 europa["getrealhidden"] = europa.getrh
+europa["getmemory"] = europa.getmem
+europa["getmemorytag"] = europa.getmemtag
 europa["hookmemory"] = europa.hookmem
 europa["getremotes"] = europa.getrems
 europa["isnilinstance"] = europa.isnil
-europa["setmemoryinflation"] = europa.setmeminflation -- [[nmyr]]
-europa["setmemorytaginflation"] = europa.setmemtaginflation -- [[nmyr]]
+europa["setmemoryinflation"] = europa.setmeminflation
+europa["setmemorytaginflation"] = europa.setmemtaginflation
 europa["disconnect"] = europa.disconn
 europa["securedisconnect"] = europa.securedisconn
 europa["hookfireserver"] = europa.hookfs
@@ -500,9 +513,9 @@ europa["waithookfunction"] = europa.waithookfunc
 europa["antihumanoidcheck"] = europa.antihumcheck
 europa["setwalkspeed"] = europa.setws
 europa["setjumppower"] = europa.setjp
-europa["sethipheight"] = europa.sethh -- [[nmyr]]
-europa["setmaxslopeangle"] = europa.setmsa -- [[nmyr]]
-europa["setgravity"] = europa.setgrav -- [[nmyr]]
+europa["sethipheight"] = europa.sethh
+europa["setmaxslopeangle"] = europa.setmsa
+europa["setgravity"] = europa.setgrav
 europa["setjumppowerenabled"] = europa.setjpenabled
 europa["loadinfiniteyield"] = europa.loadiy
 europa["loadsimplespy"] = europa.loadss
