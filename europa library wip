@@ -313,7 +313,7 @@ getgenv().europa = {
 	hookfs = if not (hookmetamethod and hookfunction) then nil else function(rem)
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.lower)
-			if not checkcaller() and method == "fireServer" then
+			if not checkcaller() and self == rem and method == "fireServer" then
 				return wait(9e9)
 			end
 			return h1(self,...)
@@ -325,16 +325,16 @@ getgenv().europa = {
 			return h2(a,...)
 		end)
 	end,
-	hookis = if not (hookmetamethod and hookfunction) then nil else function(rem)
+	hookis = if not (hookmetamethod and hookfunction) then nil else function(evn)
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.lower)
-			if not checkcaller() and method == "invokeServer" then
+			if not checkcaller() and self == evn and method == "invokeServer" then
 				return wait(9e9)
 			end
 			return h1(self,...)
 		end)
-		local h2;h2=hookfunction(rem.InvokeServer, function(a,...)
-			if not checkcaller() and a == rem then
+		local h2;h2=hookfunction(evn.InvokeServer, function(a,...)
+			if not checkcaller() and a == evn then
 				return wait(9e9)
 			end
 			return h2(a,...)
@@ -348,7 +348,7 @@ getgenv().europa = {
 		local org = stats.InstanceCount
 		task.spawn(function()
 			while task.wait(.01) do
-				org += math.random(-2, 5)
+				org += math.random(-5, 6)
 			end
 		end)
 		local h1;h1=hookmetamethod(game,"__index", function(self,arg,...)
@@ -486,7 +486,7 @@ getgenv().europa = {
 	loadcmdx = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source", true))()
 	end,
-	loaddex = function()
+	loaddex = function() -- dark dex v3 is broken on fluxus so i decided to use babyhamsta's instead
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
 	end,
 	loadss = function()
