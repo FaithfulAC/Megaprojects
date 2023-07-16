@@ -56,15 +56,15 @@ getgenv().europa = {
 		end)
 	end,
 	hookgcinfo = if not hookfunction then nil else function()
-		local mini = 1000
-		local max = 2000
+		local mini = 500
+		local max = 1200
 
 		local num = if gcinfo() < max and gcinfo() > mini then math.random(mini - 18, mini + 24) else gcinfo()
 		
 		task.spawn(function()
-			for i = 1, 5 do
-				if gcinfo() > max then max = gcinfo() end
-				if gcinfo() < mini then mini = gcinfo() end
+			for i = 1, 15 do
+				if gcinfo() > max then max = gcinfo(); mini = max - math.floor(math.random(4, 6)*100) end
+				if gcinfo() < mini then mini = gcinfo(); max = mini + math.floor(math.random(4, 6)*100) end
 				task.wait()
 			end
 		end)
@@ -72,8 +72,8 @@ getgenv().europa = {
 		task.spawn(function()
 			while game:GetService("RunService").RenderStepped:Wait() do
 				local int = math.random(4, 8)
-				if num < max - math.random(10,30) then num += int/2 game.ItemChanged:Wait() num += math.random(2) else
-					num = math.random(mini - 18, mini + 24)
+				if num < max - math.random(10,30) then num = math.floor(num+int) game.ItemChanged:Wait() num += math.random(1,2) else
+					num = math.floor(math.random(mini - 18, mini + 24))
 					game.ItemChanged:Wait()
 					num += 1
 				end
@@ -90,19 +90,13 @@ getgenv().europa = {
 			return h2(cnt,...)
 		end)
 	end,
-	getmem = function()
-		return game:GetService("Stats"):GetTotalMemoryUsageMb()
-	end,
-	getmemtag = function(enum)
-		game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
-	end,
 	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
 		local stats = game:GetService("Stats")
 		local ret = stats:GetTotalMemoryUsageMb()
 		task.spawn(function()
 			while game:GetService("RunService").RenderStepped:Wait() do
-				ret += math.random(-1,1)/8
-				task.wait(math.random(1,3)/30)
+				ret += math.random(-2,2)/32 - math.random(-.5,.5)/1500
+				task.wait(math.random(1,3)/90)
 			end
 		end)
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
@@ -119,6 +113,12 @@ getgenv().europa = {
 			return h2(a,...)
 		end)
 	end,
+	getmem = function()
+		return game:GetService("Stats"):GetTotalMemoryUsageMb()
+	end,
+	getmemtag = function(enum)
+		game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
+	end,
 	setmeminflation = function(bool)
 		local memconn = getgenv().meminflateconn
 		if bool == false then
@@ -126,14 +126,14 @@ getgenv().europa = {
 			return
 		end
 		getgenv().meminflateconn = game:GetService("RunService").Stepped:Connect(function()
-			for i = 1, 10 do
+			for i = 1, 100 do
 				local part = Instance.new("Part")
 				part.Parent = workspace
 				
 				local orient = Vector3.new(math.random(1, 360000)/100, math.random(1, 360000)/100, math.random(1, 360000)/100)
-				part.Size = Vector3.new(100,100,100)
+				part.Size = Vector3.new(2048,2048,2048)
 				part.Orientation = orient
-				part.Position = orient + Vector3.new(0,100,0)
+				part.Position = Vector3.new(9e9,9e9,9e9)
 				part.Anchored = true
 				part:Destroy()
 			end
@@ -147,11 +147,11 @@ getgenv().europa = {
 			if guifunc then guifunc:Disconnect() getgenv().memtagguifunc = nil end
 			return
 		end
-		if enum == Enum.DeveloperMemoryTag.Script then
+		if enum == Enum.DeveloperMemoryTag.Script or tostring(Enum):find("s") then
 			if scrfunc then return end
 			getgenv().memtagscriptfunc =  game:GetService("RunService").Heartbeat:Connect(function()
 				task.spawn(function(...) -- doing random stuff to increase script activity
-					for i = 1, 5 do
+					for i = 1, 100 do
 						local a = Instance.new("Script")
 						a.Enabled = false
 						a.Disabled = false
@@ -167,7 +167,10 @@ getgenv().europa = {
 					local frame = Instance.new("Frame", game:GetService("CoreGui").RobloxGui)
 					frame.Size = UDim2.new(2,0,2,0)
 					frame.Position = UDim2.new(5,0,5,0)
-					frame:Destroy()
+					task.spawn(function()
+						task.wait(1)
+						frame:Destroy()
+					end)
 				end
 			end)
 		end
@@ -192,7 +195,7 @@ getgenv().europa = {
 					task.wait()
 				end
 				table.clear(getgenv().gcinflationtable or {})
-				task.wait(2)
+				task.wait()
 			end
 		end)
 	end,
@@ -344,7 +347,7 @@ getgenv().europa = {
 		local stats = game:GetService("Stats")
 		local org = stats.InstanceCount
 		task.spawn(function()
-			while task.wait(.1) do
+			while task.wait(.01) do
 				org += math.random(-2, 5)
 			end
 		end)
@@ -492,6 +495,9 @@ getgenv().europa = {
 	loadv4 = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))()
 	end,
+	rj = function()
+		game:GetService("TeleportService"):Teleport(game.PlaceId)
+	end,
 }
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
@@ -520,6 +526,7 @@ europa["setjumppowerenabled"] = europa.setjpenabled
 europa["loadinfiniteyield"] = europa.loadiy
 europa["loadsimplespy"] = europa.loadss
 europa["loadvapev4"] = europa.loadv4
+europa["rejoin"] = europa.rj
 
 for i, v in europa do
 	getgenv()[i] = v
