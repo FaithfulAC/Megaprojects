@@ -3,6 +3,10 @@ getgenv().europa = {
 	LocalPlayer = game:GetService("Players").LocalPlayer,
 	Stats = game:GetService("Stats"),
 	ReplicatedFirst = game:GetService("ReplicatedFirst"),
+	ReplicatedStorage = game:GetService("ReplicatedStorage"),
+	Lighting = game:GetService("Lighting"),
+	LogService = game:GetService("LogService"),
+	ScriptContext = game:GetService("ScriptContext"),
 	getcs = function()
 		return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 	end,
@@ -147,7 +151,7 @@ getgenv().europa = {
 			if guifunc then guifunc:Disconnect() getgenv().memtagguifunc = nil end
 			return
 		end
-		if enum == Enum.DeveloperMemoryTag.Script or tostring(Enum):find("s") then
+		if enum == Enum.DeveloperMemoryTag.Script or tostring(enum):find("s") then
 			if scrfunc then return end
 			getgenv().memtagscriptfunc =  game:GetService("RunService").Heartbeat:Connect(function()
 				task.spawn(function(...) -- doing random stuff to increase script activity
@@ -290,7 +294,7 @@ getgenv().europa = {
 		return unpack(args)
 	end,
 	isnil = function(a)
-		return a.Parent == nil
+		return a == nil or a.Parent == nil
 	end,
 	antikick = if not (hookmetamethod and hookfunction) then nil else function()
 		local plr = game:GetService("Players").LocalPlayer
