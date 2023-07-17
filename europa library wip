@@ -226,7 +226,7 @@ getgenv().europa = {
 	end,
 	antiweaktable = if not getgc then nil else function()
 		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) and getmetatable(v)["__mode"] == "v" then
+			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__mode"] == "v" then
 				local newmeta = getmetatable(v)
 				newmeta.__mode = nil
 				setmetatable(v, newmeta)
@@ -246,7 +246,7 @@ getgenv().europa = {
 	end,
 	antitostring = if not getgc then nil else function()
 		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) and getmetatable(v)["__tostring"] then
+			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__tostring"] then
 				local newmeta = getmetatable(v)
 				newmeta.__tostring = nil
 				setmetatable(v, newmeta)
