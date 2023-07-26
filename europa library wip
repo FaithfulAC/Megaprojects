@@ -5,8 +5,6 @@ getgenv().europa = {
 	ReplicatedFirst = game:GetService("ReplicatedFirst"),
 	ReplicatedStorage = game:GetService("ReplicatedStorage"),
 	Lighting = game:GetService("Lighting"),
-	LogService = game:GetService("LogService"),
-	ScriptContext = game:GetService("ScriptContext"),
 	getcs = function()
 		return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 	end,
