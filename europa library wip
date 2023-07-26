@@ -1,14 +1,13 @@
 getgenv().europa = {
 	Players = game:GetService("Players"),
 	LocalPlayer = game:GetService("Players").LocalPlayer,
-	Stats = game:GetService("Stats"),
-	ReplicatedFirst = game:GetService("ReplicatedFirst"),
-	ReplicatedStorage = game:GetService("ReplicatedStorage"),
-	Lighting = game:GetService("Lighting"),
+	gs = function(classname: string)
+		return game:GetService(classname)
+	end,
 	getcs = function()
 		return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 	end,
-	checkvar = function(method, str)
+	checkvar = function(method: string, str: string)
 		method = method:gsub("^%u", string.lower)
 		str = str:gsub("^%u", string.lower)
 		return method == str or (method:find(str) and method:sub(1, str:len()+1) == str .. "\000")
@@ -141,7 +140,7 @@ getgenv().europa = {
 			end
 		end)
 	end,
-	setmemtaginflation = function(bool, enum) -- only supports script and gui lol (default is gui)
+	setmemtaginflation = function(bool: boolean, enum: Enum) -- only supports script and gui lol (default is gui)
 		local scrfunc = getgenv().memtagscriptfunc
 		local guifunc = getgenv().memtagguifunc
 		if bool == false then
@@ -177,7 +176,7 @@ getgenv().europa = {
 			end)
 		end
 	end,
-	setgcinflation = function(bool)
+	setgcinflation = function(bool: boolean)
 		local tbl = getgenv().gcinflationtable
 		if bool == false then
 			if tbl then getgenv().gcinflationtable = nil end
@@ -226,6 +225,31 @@ getgenv().europa = {
 			return h2(a,b,...)
 		end)	
 	end,
+	clientran = function(scr: Instance)
+		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and scr.RunContext == Enum.RunContext.Client)
+	end,
+	serverran = function(scr: Instance)
+		return scr.ClassName == "Script" and scr.RunContext ~= Enum.RunContext.Client
+	end,
+	antihttp = function(grabArgs: boolean)
+		if not grabArgs then
+			getgenv().httprequest = nil
+		else
+			getgenv().httprequest = function(tbl)
+				warn("httprequest was triggered! Here are the arguments:")
+				
+				if type(tbl) == "table" then
+					for i, v in pairs(tbl) do
+						print(i, v)
+					end
+				else
+					print(tbl)
+				end
+				
+				warn("End of arguments")
+			end
+		end
+	end,
 	antiweaktable = if not getgc then nil else function()
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__mode"] == "v" then
@@ -234,14 +258,6 @@ getgenv().europa = {
 				setmetatable(v, newmeta)
 				if table.find(v, {}) or table.find(v, game:GetService("CoreGui")) then
 					v = {}
-					setmetatable(v, {
-						__index = function()
-							return wait(9e9)
-						end,
-						__newindex = function()
-							return wait(9e9)
-						end
-					})
 				end
 			end
 		end
@@ -273,7 +289,7 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
-	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem) -- local a = {grabargs(rem)}
+	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent) -- local a = {grabargs(rem)}
 		local args = nil
 		local h;h=hookfunction(rem.FireServer, function(...)
 			args = {...}
@@ -291,8 +307,8 @@ getgenv().europa = {
 		h2=hookmetamethod(game,"__namecall", function(self,...) return h3(self,...) end)
 		return unpack(args)
 	end,
-	isnil = function(a)
-		return a == nil or a.Parent == nil
+	isnil = function(a: Instance)
+		return a.Parent == nil
 	end,
 	antikick = if not (hookmetamethod and hookfunction) then nil else function()
 		local plr = game:GetService("Players").LocalPlayer
@@ -312,7 +328,7 @@ getgenv().europa = {
 	anticrash = function()
 		return game:GetService("ScriptContext"):SetTimeout(1)
 	end,
-	hookfs = if not (hookmetamethod and hookfunction) then nil else function(rem)
+	hookfs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent)
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.lower)
 			if not checkcaller() and self == rem and method == "fireServer" then
@@ -327,7 +343,7 @@ getgenv().europa = {
 			return h2(a,...)
 		end)
 	end,
-	hookis = if not (hookmetamethod and hookfunction) then nil else function(evn)
+	hookis = if not (hookmetamethod and hookfunction) then nil else function(evn: RemoteFunction)
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.lower)
 			if not checkcaller() and self == evn and method == "invokeServer" then
@@ -360,7 +376,7 @@ getgenv().europa = {
 			return h1(self,arg,...)
 		end)
 	end,
-	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name, objtoreturn)
+	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name: string, objtoreturn: Instance)
 		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
 			local method = getnamecallmethod():gsub("^%u", string.lower)
 			if not checkcaller() and self == game and method == "getService" then
@@ -431,7 +447,7 @@ getgenv().europa = {
 			v:Disable()
 		end
 	end,
-	setnoclip = function(bool)
+	setnoclip = function(bool: boolean)
 		if not bool then
 			if noclipconn then
 				noclipconn:Disconnect()
@@ -447,7 +463,7 @@ getgenv().europa = {
 			end)
 		end)
 	end,
-	setws = function(int, loopHum)
+	setws = function(int: number, loopHum: boolean)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum and loopHum then
 			if getgenv().wsloop then
@@ -459,7 +475,7 @@ getgenv().europa = {
 		end
 		hum.WalkSpeed = int
 	end,
-	setjp = function(int, loopHum)
+	setjp = function(int: number, loopHum: boolean)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum and loopHum then
 			if getgenv().jploop then
@@ -471,15 +487,15 @@ getgenv().europa = {
 		end
 		hum.JumpPower = int
 	end,
-	setjpenabled = function(bool)
+	setjpenabled = function(bool: boolean)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum then hum.UseJumpPower = bool end
 	end,
-	sethh = function(int)
+	sethh = function(int: number)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum then hum.HipHeight = int end
 	end,
-	setgrav = function(int)
+	setgrav = function(int: number)
 		workspace.Gravity = int
 	end,
 	loadiy = function()
@@ -501,6 +517,7 @@ getgenv().europa = {
 		game:GetService("TeleportService"):Teleport(game.PlaceId)
 	end,
 }
+europa["getservice"] = europa.gs
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
 europa["getrealhidden"] = europa.getrh
