@@ -62,13 +62,8 @@ getgenv().europa = {
 
 		local num = if gcinfo() < max and gcinfo() > mini then math.random(mini - 18, mini + 24) else gcinfo()
 		
-		task.spawn(function()
-			for i = 1, 15 do
-				if gcinfo() > max then max = gcinfo(); mini = max - math.floor(math.random(4, 6)*100) end
-				if gcinfo() < mini then mini = gcinfo(); max = mini + math.floor(math.random(4, 6)*100) end
-				task.wait()
-			end
-		end)
+		if gcinfo() > max then max = gcinfo(); mini = max - math.floor(math.random(4, 6)*100) end
+		if gcinfo() < mini then mini = gcinfo(); max = mini + math.floor(math.random(4, 6)*100) end
 		
 		task.spawn(function()
 			while game:GetService("RunService").RenderStepped:Wait() do
