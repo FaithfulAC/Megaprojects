@@ -295,12 +295,15 @@ getgenv().europa = {
 			if self == rem and method == "FireServer" then
 				args = {...}
 			end
-			return h3(self,...)
+			return h2(self,...)
 		end)
 		while args == nil and task.wait() do end
 		h=hookfunction(rem.FireServer, function(...) return h(...) end)
-		h2=hookmetamethod(game,"__namecall", function(self,...) return h3(self,...) end)
+		h2=hookmetamethod(game,"__namecall", function(self,...) return h2(self,...) end)
 		return unpack(args)
+	end,
+	breakjoints = function()
+		return game:GetService("Players").LocalPlayer.Character and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid"):BreakJoints()
 	end,
 	isnil = function(a: Instance)
 		return a.Parent == nil
@@ -319,6 +322,14 @@ getgenv().europa = {
 			end
 			return h2(a,...)
 		end)
+	end,
+	removehooks = function(duration: number)
+		local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
+		getgenv().hookfunction = function()end
+		getgenv().hookmetamethod = function()end
+		task.wait(duration or 1)
+		getgenv().hookfunction = hf
+		getgenv().hookmetamethod = hmm
 	end,
 	anticrash = function()
 		return game:GetService("ScriptContext"):SetTimeout(1)
