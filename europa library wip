@@ -49,7 +49,7 @@ getgenv().europa = {
 		end
 		local h;h=hookmetamethod(game,"__index", function(self,arg,...)
 			local _arg = arg:gsub("^%u", string.upper)
-			_arg:gsub("\000", "")
+			_arg = _arg:gsub("\000", "")
 			if not checkcaller() and self == guis and _arg == "MenuIsOpen" then
 				return true
 			end
@@ -112,10 +112,10 @@ getgenv().europa = {
 	getmem = function()
 		return game:GetService("Stats"):GetTotalMemoryUsageMb()
 	end,
-	getmemtag = function(enum)
-		game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
+	getmemtag = function(enum: EnumItem)
+		return game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
 	end,
-	setmeminflation = function(bool)
+	setmeminflation = function(bool: boolean)
 		local memconn = getgenv().meminflateconn
 		if bool == false then
 			if memconn then memconn:Disconnect() getgenv().meminflateconn = nil end
@@ -159,10 +159,10 @@ getgenv().europa = {
 		else -- gui or default (gui)
 			if guifunc then return end
 			getgenv().memtagguifunc = game:GetService("RunService").Heartbeat:Connect(function()
-				for i = 1, 10 do
+				for i = 1, 100 do
 					local frame = Instance.new("Frame", game:GetService("CoreGui").RobloxGui)
-					frame.Size = UDim2.new(2,0,2,0)
-					frame.Position = UDim2.new(5,0,5,0)
+					frame.Size = UDim2.new(20,0,20,0)
+					frame.Position = UDim2.new(50,0,50,0)
 					task.spawn(function()
 						task.wait(1)
 						frame:Destroy()
@@ -174,7 +174,7 @@ getgenv().europa = {
 	setgcinflation = function(bool: boolean)
 		local tbl = getgenv().gcinflationtable
 		if bool == false then
-			if tbl then getgenv().gcinflationtable = nil end
+			if tbl then table.clear(tbl) getgenv().gcinflationtable = nil end
 			return
 		end
 		getgenv().gcinflationtable = {}
@@ -190,35 +190,29 @@ getgenv().europa = {
 					end)())
 					task.wait()
 				end
-				table.clear(getgenv().gcinflationtable or {})
+				if math.random() > 0.7 then
+					table.clear(getgenv().gcinflationtable or {})
+				end
 				task.wait()
 			end
 		end)
 	end,
-	disconn = function(conn)
+	disconn = function(conn: RBXScriptSignal)
 		for i, v in next, getconnections(conn) do
 			v:Disable()
 		end
 	end,
-	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn) -- basically a hook lol
-		local h1;h1=hookmetamethod(game,"__namecall", function(self,...)
-			if not checkcaller() and self == conn and (getnamecallmethod():lower() == "wait" or getnamecallmethod():lower() == "connect") then
-				return wait(9e9)
+	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn: RBXScriptSignal, waithook: boolean) -- basically a hook lol
+		local temp = game:GetPropertyChangedSignal("Name"):Connect(function()end)
+		local h;h=hookmetamethod(temp,"__index", function(self,b,...)
+			if not checkcaller() and self == conn and b == "Connected" then
+				return if waithook then wait(9e9) else true
 			end
-			return h1(self,...)
+			return h(self,b,...)
 		end)
-		local h2;h2=hookfunction(conn.Wait, function(a,...)
-			if not checkcaller() and a == conn then
-				return wait(9e9)
-			end
-			return h2(a,...)
-		end)	
-		local h3;h3=hookfunction(conn.Connect, function(a,b,...)
-			if not checkcaller() and a == conn and type(b) == "function" then
-				return wait(9e9)
-			end
-			return h2(a,b,...)
-		end)	
+		for i, v in next, getconnections(conn) do
+			v:Disable()
+		end
 	end,
 	clientran = function(scr: Instance)
 		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and scr.RunContext == Enum.RunContext.Client)
@@ -249,6 +243,7 @@ getgenv().europa = {
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__mode"] == "v" then
 				local newmeta = getmetatable(v)
+				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
 				newmeta.__mode = nil
 				setmetatable(v, newmeta)
 				if table.find(v, {}) or table.find(v, game:GetService("CoreGui")) then
@@ -261,6 +256,7 @@ getgenv().europa = {
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__tostring"] then
 				local newmeta = getmetatable(v)
+				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
 				newmeta.__tostring = nil
 				setmetatable(v, newmeta)
 			end
@@ -269,7 +265,7 @@ getgenv().europa = {
 	getscripts = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
+			if (pcall(v.IsA, v)) and v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
 				table.insert(tbl, v)
 			end
 		end
@@ -278,7 +274,7 @@ getgenv().europa = {
 	getrems = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if v:IsA("RemoteEvent") then
+			if (pcall(v.IsA, v)) and v:IsA("RemoteEvent") then
 				table.insert(tbl, v)
 			end
 		end
@@ -302,6 +298,42 @@ getgenv().europa = {
 		h2=hookmetamethod(game,"__namecall", function(self,...) return h2(self,...) end)
 		return unpack(args)
 	end,
+	gettables = if not getgc then nil else function()
+		local tbl = {} -- lol
+		for i, v in getgc(true) do
+			if type(v) == "table" then
+				table.insert(tbl, v)
+			end
+		end
+		return tbl
+	end,
+	getmetatables = if not getgc then nil else function()
+		local tbl = {}
+		for i, v in getgc(true) do
+			if type(v) == "table" and getmetatable(v) then
+				table.insert(tbl, getmetatable(v))
+			end
+		end
+		return tbl
+	end,
+	getlfunctions = if not (getgc and islclosure) then nil else function()
+		local tbl = {}
+		for i, v in getgc() do
+			if type(v) == "function" and islclosure(v) then
+				table.insert(tbl, v)
+			end
+		end
+		return tbl
+	end,
+	getcfunctions = if not (getgc and iscclosure) then nil else function()
+		local tbl = {}
+		for i, v in getgc() do
+			if type(v) == "function" and iscclosure(v) then
+				table.insert(tbl, v)
+			end
+		end
+		return tbl
+	end,
 	breakjoints = function()
 		return game:GetService("Players").LocalPlayer.Character and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid"):BreakJoints()
 	end,
@@ -324,12 +356,14 @@ getgenv().europa = {
 		end)
 	end,
 	removehooks = function(duration: number)
-		local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
-		getgenv().hookfunction = function()end
-		getgenv().hookmetamethod = function()end
-		task.wait(duration or 1)
-		getgenv().hookfunction = hf
-		getgenv().hookmetamethod = hmm
+		task.spawn(function()
+			local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
+			getgenv().hookfunction = function()end
+			getgenv().hookmetamethod = function()end
+			task.wait(duration or 2)
+			getgenv().hookfunction = hf
+			getgenv().hookmetamethod = hmm
+		end)
 	end,
 	anticrash = function()
 		return game:GetService("ScriptContext"):SetTimeout(1)
@@ -364,7 +398,7 @@ getgenv().europa = {
 			return h2(a,...)
 		end)
 	end,
-	ls = function(url)
+	ls = function(url: string)
 		return loadstring(game:HttpGet(url))()
 	end,
 	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
@@ -402,14 +436,6 @@ getgenv().europa = {
 			if not checkcaller() then
 				return wait(9e9)
 			end	
-			return h(...)
-		end)
-	end,
-	hookfunc = if not hookfunction then nil else function(fnc, valtoreturn)
-		local h;h=hookfunction(fnc, function(...)
-			if not checkcaller() then
-				return valtoreturn
-			end
 			return h(...)
 		end)
 	end,
@@ -510,8 +536,17 @@ getgenv().europa = {
 	loadcmdx = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source", true))()
 	end,
-	loaddex = function() -- dark dex v3 is broken on fluxus so i decided to use babyhamsta's instead
+	loadsecuredex = function() -- dark dex v3 is broken on fluxus so i decided to use babyhamsta's instead
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
+	end,
+	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v3
+		local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
+		getgenv().hookfunction = function()end
+		getgenv().hookmetamethod = function()end
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
+		task.wait(.5)
+		getgenv().hookfunction = hf
+		getgenv().hookmetamethod = hmm
 	end,
 	loadss = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
@@ -526,11 +561,12 @@ getgenv().europa = {
 europa["getservice"] = europa.gs
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
-europa["getrealhidden"] = europa.getrh
+europa["getrealhidden"], europa["getrhui"] = europa.getrh, europa.getrh
 europa["getmemory"] = europa.getmem
 europa["getmemorytag"] = europa.getmemtag
 europa["hookmemory"] = europa.hookmem
 europa["getremotes"] = europa.getrems
+europa["getluafunctions"] = europa.getlfunctions
 europa["isnilinstance"] = europa.isnil
 europa["setmemoryinflation"] = europa.setmeminflation
 europa["setmemorytaginflation"] = europa.setmemtaginflation
@@ -540,6 +576,7 @@ europa["hookfireserver"] = europa.hookfs
 europa["hookinvokeserver"] = europa.hookis
 europa["hookgetservice"] = europa.hookgs
 europa["hookinstancecount"] = europa.hookinscount
+europa["hookfocusedtextbox"] = europa.hookftb
 europa["waithookfunction"] = europa.waithookfunc
 europa["antihumanoidcheck"] = europa.antihumcheck
 europa["setwalkspeed"] = europa.setws
