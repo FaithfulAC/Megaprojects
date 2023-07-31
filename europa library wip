@@ -204,7 +204,7 @@ getgenv().europa = {
 	end,
 	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn: RBXScriptSignal, waithook: boolean) -- basically a hook lol
 		local temp = game:GetPropertyChangedSignal("Name"):Connect(function()end)
-		local h;h=hookmetamethod(temp,"__index", function(self,b,...)
+		local h;h=hookmetamethod(c,"__index", function(self,b,...)
 			if not checkcaller() and self == conn and b == "Connected" then
 				return if waithook then wait(9e9) else true
 			end
@@ -406,7 +406,7 @@ getgenv().europa = {
 		local org = stats.InstanceCount
 		task.spawn(function()
 			while task.wait(.01) do
-				org += math.random(-5, 6)
+				org += math.random(-100, 101)
 			end
 		end)
 		local h1;h1=hookmetamethod(game,"__index", function(self,arg,...)
@@ -576,7 +576,6 @@ europa["hookfireserver"] = europa.hookfs
 europa["hookinvokeserver"] = europa.hookis
 europa["hookgetservice"] = europa.hookgs
 europa["hookinstancecount"] = europa.hookinscount
---europa["hookfocusedtextbox"] = europa.hookftb -- first argument as a GUI?
 europa["waithookfunction"] = europa.waithookfunc
 europa["antihumanoidcheck"] = europa.antihumcheck
 europa["setwalkspeed"] = europa.setws
