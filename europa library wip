@@ -246,9 +246,20 @@ getgenv().europa = {
 				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
 				newmeta.__mode = nil
 				setmetatable(v, newmeta)
-				if table.find(v, {}) or table.find(v, game:GetService("CoreGui")) then
-					v = {}
+				v = {}
+			end
+		end
+	end,
+	antiweaktable2 = if not getgc then nil else function()
+		for i, v in getgc(true) do
+			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__mode"] == "v" then
+				local newmeta = getmetatable(v)
+				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
+				newmeta.__mode = nil
+				newmeta.__index = function()
+					return wait(9e9)
 				end
+				setmetatable(v, newmeta)
 			end
 		end
 	end,
@@ -265,7 +276,7 @@ getgenv().europa = {
 	getscripts = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if (pcall(v.IsA, v)) and v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
+			if (pcall(v.IsA, v, "Instance")) and v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
 				table.insert(tbl, v)
 			end
 		end
@@ -274,7 +285,7 @@ getgenv().europa = {
 	getrems = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if (pcall(v.IsA, v)) and v:IsA("RemoteEvent") then
+			if (pcall(v.IsA, v, "Instance")) and v:IsA("RemoteEvent") then
 				table.insert(tbl, v)
 			end
 		end
@@ -312,6 +323,15 @@ getgenv().europa = {
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) then
 				table.insert(tbl, getmetatable(v))
+			end
+		end
+		return tbl
+	end,
+	getfunctions = if not getgc then nil else function()
+		local tbl = {}
+		for i, v in getgc() do
+			if type(v) == "function" then
+				table.insert(tbl, v)
 			end
 		end
 		return tbl
