@@ -197,12 +197,12 @@ getgenv().europa = {
 			end
 		end)
 	end,
-	disconn = function(conn: RBXScriptSignal)
+	disconn = function(conn)
 		for i, v in next, getconnections(conn) do
 			v:Disable()
 		end
 	end,
-	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn: RBXScriptSignal, waithook: boolean) -- basically a hook lol
+	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn, waithook: boolean) -- basically a hook lol
 		local temp = game:GetPropertyChangedSignal("Name"):Connect(function()end)
 		local h;h=hookmetamethod(c,"__index", function(self,b,...)
 			if not checkcaller() and self == conn and b == "Connected" then
