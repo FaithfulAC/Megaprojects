@@ -250,18 +250,21 @@ getgenv().europa = {
 			end
 		end
 	end,
-	antiweaktable2 = if not getgc then nil else function()
-		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__mode"] == "v" then
-				local newmeta = getmetatable(v)
-				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
-				newmeta.__mode = nil
-				newmeta.__index = function()
-					return wait(9e9)
+	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean)
+		local h;h=hookfunction(getrenv().setmetatable, function(tbl1, tbl2, ...)
+			if not checkcaller() and #tbl1 > 0 and (if checkMetaAmnt then #tbl2 == 1 else true) then
+				local isMode = false
+				for i, v in pairs(tbl2) do -- Member table.foreachi is deprecated :(
+					if i == "__mode" and v == "v" then isMode = true end
 				end
-				setmetatable(v, newmeta)
+				if isMode then
+					local tbl = {}
+					setmetatable(tbl,{__index = function() return "v" end})
+					return setmetatable({unpack(tbl1)}, tbl) -- because the table will not equal tbl1 using this
+				end
 			end
-		end
+			return h(tbl1, tbl2, ...)
+		end)
 	end,
 	antitostring = if not getgc then nil else function()
 		for i, v in getgc(true) do
