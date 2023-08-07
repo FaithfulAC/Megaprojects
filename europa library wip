@@ -260,7 +260,7 @@ getgenv().europa = {
 				if isMode then
 					local tbl = {}
 					setmetatable(tbl,{__index = function() return "v" end})
-					return setmetatable({unpack(tbl1)}, tbl) -- because the table will not equal tbl1 using this
+					return setmetatable({}, tbl) -- because the table will not equal tbl1 using this, lessening detections
 				end
 			end
 			return h(tbl1, tbl2, ...)
