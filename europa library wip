@@ -1,6 +1,6 @@
 getgenv().europa = {
 	Players = game:GetService("Players"),
-	LocalPlayer = game:GetService("Players").LocalPlayer,
+	LocalPlayer = game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait(),
 	gs = function(classname: string)
 		return game:GetService(classname)
 	end,
