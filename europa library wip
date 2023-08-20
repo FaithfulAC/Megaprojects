@@ -1,6 +1,6 @@
 getgenv().europa = {
 	Players = game:GetService("Players"),
-	LocalPlayer = game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait(),
+	LocalPlayer = game:GetService("Players").LocalPlayer,
 	gs = function(classname: string)
 		return game:GetService(classname)
 	end,
@@ -197,12 +197,12 @@ getgenv().europa = {
 			end
 		end)
 	end,
-	disconn = function(conn)
+	disconn = function(conn: RBXScriptSignal)
 		for i, v in next, getconnections(conn) do
 			v:Disable()
 		end
 	end,
-	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn, waithook: boolean) -- basically a hook lol
+	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn: RBXScriptSignal, waithook: boolean) -- basically a hook lol
 		local temp = game:GetPropertyChangedSignal("Name"):Connect(function()end)
 		local h;h=hookmetamethod(c,"__index", function(self,b,...)
 			if not checkcaller() and self == conn and b == "Connected" then
@@ -246,25 +246,11 @@ getgenv().europa = {
 				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
 				newmeta.__mode = nil
 				setmetatable(v, newmeta)
-				v = {}
+				if table.find(v, {}) or table.find(v, game:GetService("CoreGui")) then
+					v = {}
+				end
 			end
 		end
-	end,
-	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean)
-		local h;h=hookfunction(getrenv().setmetatable, function(tbl1, tbl2, ...)
-			if not checkcaller() and #tbl1 > 0 and (if checkMetaAmnt then #tbl2 == 1 else true) then
-				local isMode = false
-				for i, v in pairs(tbl2) do -- Member table.foreachi is deprecated :(
-					if i == "__mode" and v == "v" then isMode = true end
-				end
-				if isMode then
-					local tbl = {}
-					setmetatable(tbl,{__index = function() return "v" end})
-					return setmetatable({}, tbl) -- because the table will not equal tbl1 using this, lessening detections
-				end
-			end
-			return h(tbl1, tbl2, ...)
-		end)
 	end,
 	antitostring = if not getgc then nil else function()
 		for i, v in getgc(true) do
@@ -279,7 +265,7 @@ getgenv().europa = {
 	getscripts = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if (pcall(v.IsA, v, "Instance")) and v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
+			if (pcall(v.IsA, v)) and v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
 				table.insert(tbl, v)
 			end
 		end
@@ -288,7 +274,7 @@ getgenv().europa = {
 	getrems = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if (pcall(v.IsA, v, "Instance")) and v:IsA("RemoteEvent") then
+			if (pcall(v.IsA, v)) and v:IsA("RemoteEvent") then
 				table.insert(tbl, v)
 			end
 		end
@@ -326,15 +312,6 @@ getgenv().europa = {
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) then
 				table.insert(tbl, getmetatable(v))
-			end
-		end
-		return tbl
-	end,
-	getfunctions = if not getgc then nil else function()
-		local tbl = {}
-		for i, v in getgc() do
-			if type(v) == "function" then
-				table.insert(tbl, v)
 			end
 		end
 		return tbl
