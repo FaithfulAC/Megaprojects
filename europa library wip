@@ -49,8 +49,7 @@ getgenv().europa = {
 		end
 		local h;h=hookmetamethod(game,"__index", function(self,arg,...)
 			local _arg = if type(arg) == "string" then arg:gsub("^%u", string.upper) else "" -- previously detected by metatable __namecall
-			_arg = _arg:gsub("\0", "")
-			if not checkcaller() and self == guis and _arg == "MenuIsOpen" then
+			if not checkcaller() and self == guis and _arg == "MenuIsOpen" or _arg:sub(1, 11) == "MenuIsOpen\0" then
 				return true
 			end
 			return h(self,arg,...)
@@ -80,7 +79,7 @@ getgenv().europa = {
 			return h(...)
 		end)
 		local h2;h2=hookfunction(getrenv().collectgarbage, function(cnt,...)
-			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\000") then
+			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return num
 			end
 			return h2(cnt,...)
@@ -170,6 +169,9 @@ getgenv().europa = {
 				end
 			end)
 		end
+	end,
+	isalive = isalive or function(): boolean -- thank u electron for the idea :))))))))))
+		return game:GetService("Stats").DataSendKbps ~= 0 and game:GetService("Stats").DataReceiveKbps ~= 0
 	end,
 	setgcinflation = function(bool: boolean)
 		local tbl = getgenv().gcinflationtable
@@ -443,7 +445,7 @@ getgenv().europa = {
 			end
 		end)
 		local h1;h1=hookmetamethod(game,"__index", function(self,arg,...)
-			if not checkcaller() and self == stats and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\000") then
+			if not checkcaller() and self == stats and type(arg) == "string" and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\0" or (not stats:FindFirstChild("instanceCount") and (arg == "instanceCount" or arg:sub(1,14) == "instanceCount\0"))) then
 				return org
 			end
 			return h1(self,arg,...)
