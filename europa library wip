@@ -10,7 +10,7 @@ getgenv().europa = {
 	checkvar = function(method: string, str: string): boolean
 		method = method:gsub("^%u", string.lower)
 		str = str:gsub("^%u", string.lower)
-		return method == str or (method:find(str) and method:sub(1, str:len()+1) == str .. "\000")
+		return method == str or (method:find(str) and method:sub(1, str:len()+1) == str .. "\0")
 	end,
 	getrh = function()
 		--[[if Krnl then
@@ -28,7 +28,8 @@ getgenv().europa = {
 	hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
 		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
 		
-		local gh1;gh1=hookmetamethod(game,"__namecall", function(self,...)
+		local gh1;gh1=hookmetamethod(game,"__namecall", function(...)
+			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.lower)
 			if not checkcaller() and self == pgui and method == "getGuiObjectsAtPosition" then
 				return 1
@@ -47,12 +48,13 @@ getgenv().europa = {
 		for i, v in next, getconnections(guis.MenuClosed) do
 			v:Disable()
 		end
-		local h;h=hookmetamethod(game,"__index", function(self,arg,...)
+		local h;h=hookmetamethod(game,"__index", function(...)
+			local self,arg = ...
 			local _arg = if type(arg) == "string" then arg:gsub("^%u", string.upper) else "" -- previously detected by metatable __namecall
 			if not checkcaller() and self == guis and _arg == "MenuIsOpen" or _arg:sub(1, 11) == "MenuIsOpen\0" then
 				return true
 			end
-			return h(self,arg,...)
+			return h(...)
 		end)
 	end,
 	hookgcinfo = if not hookfunction then nil else function()
@@ -78,11 +80,12 @@ getgenv().europa = {
 			if not checkcaller() then return num end
 			return h(...)
 		end)
-		local h2;h2=hookfunction(getrenv().collectgarbage, function(cnt,...)
+		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
+			local cnt = ... -- anti void detection
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return num
 			end
-			return h2(cnt,...)
+			return h2(...)
 		end)
 	end,
 	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
@@ -101,11 +104,12 @@ getgenv().europa = {
 			end
 			return h1(self,...)
 		end)
-		local h2;h2=hookfunction(stats.GetTotalMemoryUsageMb, function(a,...)
-			if not checkcaller() and a == stats then
+		local h2;h2=hookfunction(stats.GetTotalMemoryUsageMb, function(...)
+			local self = ... -- anti void detection u get the deal
+			if not checkcaller() and self == stats then
 				return ret
 			end
-			return h2(a,...)
+			return h2(...)
 		end)
 	end,
 	getmem = function()
@@ -204,7 +208,7 @@ getgenv().europa = {
 			v:Disable()
 		end
 	end,
-	securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn, waithook: boolean) -- basically a hook lol
+	--[[securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn, waithook: boolean) -- basically a hook lol
 		local temp = game:GetPropertyChangedSignal("Name"):Connect(function()end)
 		local h;h=hookmetamethod(c,"__index", function(self,b,...)
 			if not checkcaller() and self == conn and b == "Connected" then
@@ -215,7 +219,7 @@ getgenv().europa = {
 		for i, v in next, getconnections(conn) do
 			v:Disable()
 		end
-	end,
+	end,]]
 	clientran = function(scr: Instance)
 		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and scr.RunContext == Enum.RunContext.Client)
 	end,
@@ -242,18 +246,18 @@ getgenv().europa = {
 		end
 	end,
 	antiweaktable = if not getgc then nil else function()
-		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and (rawget(getmetatable(v), "__mode") == "v" or rawget(getmetatable(v), "__mode") == "kv") then
-				local newmeta = getmetatable(v)
-				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
-				rawset(newmeta,"__mode",nil)
-				setmetatable(v, newmeta)
-				v = {}
+		game:GetService("RunService").Heartbeat:Connect(function() -- instead of waithooking i have this monstrosity right unlimited
+			for i, v in getgc(true) do
+				if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and type(rawget(getmetatable(v), "__mode")) == "string" and rawget(getmetatable(v), "__mode"):find("v") then
+					if table.isfrozen(v) then continue end
+					table.clear(v)
+				end
 			end
-		end
+		end)
 	end,
 	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean)
-		local h;h=hookfunction(getrenv().setmetatable, function(tbl1, tbl2, ...)
+		local h;h=hookfunction(getrenv().setmetatable, function(...)
+			local tbl1, tbl2 = ...
 			if not checkcaller() and #tbl1 > 0 and (if checkMetaAmnt then #tbl2 == 1 else true) then
 				local isMode = false
 				local var = nil
@@ -269,7 +273,7 @@ getgenv().europa = {
 					return setmetatable(target, tbl)
 				end
 			end
-			return h(tbl1, tbl2, ...)
+			return h(...)
 		end)
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and (rawget(getmetatable(v), "__mode") == "v" or rawget(getmetatable(v), "__mode") == "kv") then
@@ -312,7 +316,8 @@ getgenv().europa = {
 			args = {...}
 			return h(...)
 		end)
-		local h2;h2=hookmetamethod(game,"__namecall", function(self,...)
+		local h2;h2=hookmetamethod(game,"__namecall", function(...)
+			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.upper)
 			if self == rem and method == "FireServer" then
 				args = {...}
@@ -321,7 +326,7 @@ getgenv().europa = {
 		end)
 		while args == nil and task.wait() do end
 		h=hookfunction(rem.FireServer, function(...) return h(...) end)
-		h2=hookmetamethod(game,"__namecall", function(self,...) return h2(self,...) end)
+		h2=hookmetamethod(game,"__namecall", function(...) return h2(...) end)
 		return unpack(args)
 	end,
 	gettables = if not getgc then nil else function()
@@ -444,11 +449,12 @@ getgenv().europa = {
 				org += math.random(-100, 101)
 			end
 		end)
-		local h1;h1=hookmetamethod(game,"__index", function(self,arg,...)
+		local h1;h1=hookmetamethod(game,"__index", function(...)
+			local self, arg = ...
 			if not checkcaller() and self == stats and type(arg) == "string" and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\0" or (not stats:FindFirstChild("instanceCount") and (arg == "instanceCount" or arg:sub(1,14) == "instanceCount\0"))) then
 				return org
 			end
-			return h1(self,arg,...)
+			return h1(...)
 		end)
 	end,
 	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name: string, objtoreturn: Instance)
