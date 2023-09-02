@@ -210,18 +210,16 @@ getgenv().europa = {
 			v:Disable()
 		end
 	end,
-	--[[securedisconn = if not (hookmetamethod and hookfunction) then nil else function(conn, waithook: boolean) -- basically a hook lol
-		local temp = game:GetPropertyChangedSignal("Name"):Connect(function()end)
-		local h;h=hookmetamethod(c,"__index", function(self,b,...)
-			if not checkcaller() and self == conn and b == "Connected" then
+	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(waithook: boolean)
+		-- unfortunately unable to determine the connection to disconnect so this is for all connections
+		-- do spoofconns(true/false) then disconn(examplesignal)
+		local h;h=hookmetamethod(Instance.new("Part").Changed:Connect(function()end),"__index", function(self,arg)
+			if not checkcaller() and type(arg) == "string" and arg == "Connected" or arg:sub(1,10) == "Connected\0" then
 				return if waithook then wait(9e9) else true
 			end
-			return h(self,b,...)
+			return h(self,arg)
 		end)
-		for i, v in next, getconnections(conn) do
-			v:Disable()
-		end
-	end,]]
+	end,
 	clientran = function(scr: Instance)
 		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and scr.RunContext == Enum.RunContext.Client)
 	end,
@@ -619,7 +617,7 @@ europa["isnilinstance"] = europa.isnil
 europa["setmemoryinflation"] = europa.setmeminflation
 europa["setmemorytaginflation"] = europa.setmemtaginflation
 europa["disconnect"] = europa.disconn
-europa["securedisconnect"] = europa.securedisconn
+europa["spoofconnections"] = europa.spoofconns
 europa["hookfireserver"] = europa.hookfs
 europa["hookinvokeserver"] = europa.hookis
 europa["hookgetservice"] = europa.hookgs
