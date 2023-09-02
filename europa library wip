@@ -205,6 +205,36 @@ getgenv().europa = {
 			end
 		end)
 	end,
+	setfncintbl = function(gtbl, fncname: string, newfnc)
+		local istbl = nil
+		local target do
+			if type(gtbl) == "string" then
+				target = getrenv()[gtbl]
+				istbl = false
+			elseif type(gtbl) == "table" then
+				for i, v in getrenv() do if v == gtbl then target = v break end end
+				istbl = true
+			else
+				return error("invalid argument #1 to 'setfunctionintable' (table or string expected)")
+			end
+		end
+		local unpacktbl = target
+		unpacktbl[fncname] = nil
+		if istbl then
+			for i, v in getrenv() do
+				if v == gtbl then
+					getrenv()[i] = {
+						[fncname] = newfnc, unpack(unpacktbl)
+					}
+					break
+				end
+			end
+		else
+			getrenv()[gtbl] = {
+				[fncname] = newfnc, unpack(unpacktbl)
+			}
+		end
+	end,
 	disconn = function(conn)
 		for i, v in next, getconnections(conn) do
 			v:Disable()
@@ -616,6 +646,7 @@ europa["getluafunctions"] = europa.getlfunctions
 europa["isnilinstance"] = europa.isnil
 europa["setmemoryinflation"] = europa.setmeminflation
 europa["setmemorytaginflation"] = europa.setmemtaginflation
+europa["setfunctionintable"] = europa.setfncintbl
 europa["disconnect"] = europa.disconn
 europa["spoofconnections"] = europa.spoofconns
 europa["hookfireserver"] = europa.hookfs
