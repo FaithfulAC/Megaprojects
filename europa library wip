@@ -218,7 +218,7 @@ getgenv().europa = {
 				return error("invalid argument #1 to 'setfunctionintable' (table or string expected)")
 			end
 		end
-		local unpacktbl = target
+		local unpacktbl = {unpack(target)}
 		unpacktbl[fncname] = nil
 		if istbl then
 			for i, v in getrenv() do
