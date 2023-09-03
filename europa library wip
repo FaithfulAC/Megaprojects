@@ -312,13 +312,12 @@ getgenv().europa = {
 			end
 		end
 	end,
-	antitostring = if not getgc then nil else function()
+	antitostring = if not getgc then nil else function() -- fixing krnl decompiler detection i hope
 		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and getmetatable(v)["__tostring"] then
-				local newmeta = getmetatable(v)
-				if table.isfrozen(v) or table.isfrozen(newmeta) then continue end
-				rawset(newmeta, "__tostring", function() return "" end)
-				setmetatable(v, newmeta)
+			if type(v) == "table" and type(getmetatable(v)) == "table" and not table.isfrozen(v) and not table.isfrozen(getmetatable(v)) then
+				if rawget(getmetatable(v),"__tostring") then
+					table.clear(getmetatable(v))
+				end
 			end
 		end
 	end,
