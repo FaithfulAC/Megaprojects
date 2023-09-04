@@ -286,9 +286,9 @@ getgenv().europa = {
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and type(rawget(getmetatable(v), "__mode")) == "string" and rawget(getmetatable(v), "__mode"):find("v") then
 				if table.isfrozen(v) or table.isfrozen(getmetatable(v)) then continue end
-				rawset(getmetatable(v),"__mode",nil)
-				getmetatable(v).__index = function() return wait(9e5) end
-				setmetatable(getmetatable(v), {__index = function() return wait(9e5) end})
+				local temp = rawget(getmetatable(v),"__mode")
+				v = {}
+				setmetatable(v,{__mode = temp})
 			end
 		end
 	end,
