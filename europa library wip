@@ -25,28 +25,34 @@ getgenv().europa = {
 			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 		end
 	end,
-	hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
+	hookggoap = if not (hookmetamethod and hookfunction) then nil else function() -- why did i make it return a number bruhhh
 		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
+		local stuff = Instance.new("ScreenGui",pgui)
+		stuff.Name = "TouchGui"
+		local stuff2 = Instance.new("Frame",stuff)
+		stuff2.Name = "TouchControlFrame"
+		stuff2.Size = UDim2.fromScale(1,1)
+		stuff2.Visible = false
 		
 		local gh1;gh1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.lower)
 			if not checkcaller() and self == pgui and method == "getGuiObjectsAtPosition" then
-				return 1
+				return {stuff2}
 			end
 			return gh1(...)
 		end)
 		local gh2;gh2=hookfunction(pgui.GetGuiObjectsAtPosition, function(...)
 			local arg = ...
 			if not checkcaller() and arg == pgui then
-				return 1
+				return {stuff2}
 			end
 			return gh1(...)
 		end)
 	end,
 	hookggoap2 = if not (hookmetamethod and hookfunction) then nil else function()
 		local guis = game:GetService("GuiService")
-		for i, v in next, getconnections(guis.MenuClosed) do
+		for i, v in next, getconnections(guis.MenuClosed) do -- spoofconns maybe? ;)
 			v:Disable()
 		end
 		local h;h=hookmetamethod(game,"__index", function(...)
@@ -107,7 +113,7 @@ getgenv().europa = {
 			return h1(...)
 		end)
 		local h2;h2=hookfunction(stats.GetTotalMemoryUsageMb, function(...)
-			local self = ... -- anti void detection u get the deal
+			local self = ...
 			if not checkcaller() and self == stats then
 				return ret
 			end
@@ -243,11 +249,12 @@ getgenv().europa = {
 	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(waithook: boolean)
 		-- unfortunately unable to determine the connection to disconnect so this is for all connections
 		-- do spoofconns(true/false) then disconn(examplesignal)
-		local h;h=hookmetamethod(Instance.new("Part").Changed:Connect(function()end),"__index", function(self,arg)
+		local h;h=hookmetamethod(Instance.new("Part").Changed:Connect(function()end),"__index", function(...)
+			local self, arg = ...
 			if not checkcaller() and type(arg) == "string" and arg == "Connected" or arg:sub(1,10) == "Connected\0" then
-				return if waithook then wait(9e9) else true
+				return if waithook then error() else true -- no wait(9e9) :(
 			end
-			return h(self,arg)
+			return h(...)
 		end)
 	end,
 	clientran = function(scr: Instance)
@@ -351,7 +358,7 @@ getgenv().europa = {
 			if self == rem and method == "FireServer" then
 				args = {...}
 			end
-			return h2(self,...)
+			return h2(...)
 		end)
 		while args == nil and task.wait() do end
 		h=hookfunction(rem.FireServer, function(...) return h(...) end)
