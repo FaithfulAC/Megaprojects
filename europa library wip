@@ -95,6 +95,50 @@ getgenv().europa = {
 			return h2(...)
 		end)
 	end,
+	hookgcinfo2 = if not hookfunction then nil else function() -- more realistic and less detectable by itemchanged
+		local ret
+		local max = gcinfo()+math.random(
+			math.floor(gcinfo()/6),
+			math.floor(gcinfo()/4)
+		)
+		local mini = gcinfo()-math.random(
+			math.floor(gcinfo()/6),
+			math.floor(gcinfo()/4)
+		)
+		ret = gcinfo()
+
+		local function decrease()
+			for i = 1, 4 do
+				ret = max - math.floor((max - mini*1.25)*(i/4))
+				task.wait(math.random(25,45)/1000)
+			end
+		end
+
+		local range1 = game:GetService("Stats").InstanceCount
+		local range2 = range1 + math.random(1000, 3000)
+
+		task.spawn(function()
+			while game:GetService("RunService").Heartbeat:Wait() do
+				if ret > max + math.random(-50,50) then decrease() end
+				ret += math.floor(math.random(range1,range2)/10000)
+				game.ItemChanged:Wait()
+				ret += math.random(2)
+				game.ItemChanged:Wait()
+				ret += 1
+			end
+		end)
+
+		local h1;h1=hookfunction(getrenv().gcinfo, function(...)
+			return if not checkcaller() then ret else h1(...)
+		end)
+		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
+			local cnt = ...
+			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
+				return ret
+			end
+			return h2(...)
+		end)
+	end,
 	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
 		local stats = game:GetService("Stats")
 		local ret = stats:GetTotalMemoryUsageMb()
