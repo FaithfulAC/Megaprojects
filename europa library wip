@@ -40,6 +40,7 @@ getgenv().europa = {
 			if not checkcaller() and self == pgui and method == "getGuiObjectsAtPosition" then
 				return {stuff2}
 			end
+			self=nil
 			return gh1(...)
 		end)
 		local gh2;gh2=hookfunction(pgui.GetGuiObjectsAtPosition, function(...)
@@ -47,6 +48,7 @@ getgenv().europa = {
 			if not checkcaller() and arg == pgui then
 				return {stuff2}
 			end
+			arg=nil
 			return gh1(...)
 		end)
 	end,
@@ -56,11 +58,12 @@ getgenv().europa = {
 			v:Disable()
 		end
 		local h;h=hookmetamethod(game,"__index", function(...)
-			local self, arg: string = ...
-			local _arg = arg:gsub("^%u", string.upper)
+			local self, arg = ...
+			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.upper)) or setmetatable({},{__namecall=function()return false end})
 			if not checkcaller() and self == guis and _arg == "MenuIsOpen" or _arg:sub(1, 11) == "MenuIsOpen\0" then
 				return true
 			end
+			self,arg=nil,nil
 			return h(...)
 		end)
 	end,
@@ -92,6 +95,7 @@ getgenv().europa = {
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return num
 			end
+			cnt=nil
 			return h2(...)
 		end)
 	end,
@@ -109,12 +113,12 @@ getgenv().europa = {
 
 		local function decrease()
 			for i = 1, 4 do
-				ret = max - math.floor((max - mini*1.25)*(i/4))
+				ret = max - math.floor(((max - mini*1.25)*(i/4))+math.random(-20,20))
 				task.wait(math.random(25,45)/1000)
 			end
 		end
 
-		local range1 = game:GetService("Stats").InstanceCount
+		local range1 = Stats().InstanceCount
 		local range2 = range1 + math.random(1000, 3000)
 
 		task.spawn(function()
@@ -136,6 +140,7 @@ getgenv().europa = {
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return ret
 			end
+			cnt=nil -- thanks wheat for making my bypasses even less detectable
 			return h2(...)
 		end)
 	end,
@@ -154,6 +159,7 @@ getgenv().europa = {
 			if not checkcaller() and self == stats and method == "GetTotalMemoryUsageMb" then
 				return ret
 			end
+			self=nil
 			return h1(...)
 		end)
 		local h2;h2=hookfunction(stats.GetTotalMemoryUsageMb, function(...)
@@ -161,6 +167,7 @@ getgenv().europa = {
 			if not checkcaller() and self == stats then
 				return ret
 			end
+			self=nil
 			return h2(...)
 		end)
 	end,
@@ -298,6 +305,7 @@ getgenv().europa = {
 			if not checkcaller() and type(arg) == "string" and arg == "Connected" or arg:sub(1,10) == "Connected\0" then
 				return if waithook then error() else true -- no wait(9e9) :(
 			end
+			self,arg=nil
 			return h(...)
 		end)
 	end,
@@ -354,6 +362,7 @@ getgenv().europa = {
 					return setmetatable(target, tbl)
 				end
 			end
+			tbl1,tbl2=nil
 			return h(...)
 		end)
 		for i, v in getgc(true) do
@@ -402,6 +411,7 @@ getgenv().europa = {
 			if self == rem and method == "FireServer" then
 				args = {...}
 			end
+			self=nil
 			return h2(...)
 		end)
 		while args == nil and task.wait() do end
@@ -467,6 +477,7 @@ getgenv().europa = {
 			if not checkcaller() and self == plr and getnamecallmethod():lower() == "kick" then
 				return wait(9e9)
 			end
+			self=nil
 			return h1(...)
 		end)
 		local h2;h2=hookfunction(game:GetService("Players").LocalPlayer.Kick, function(...)
@@ -474,6 +485,7 @@ getgenv().europa = {
 			if not checkcaller() and self == plr then
 				return wait(9e9)
 			end
+			self=nil
 			return h2(...)
 		end)
 	end,
@@ -497,6 +509,7 @@ getgenv().europa = {
 			if not checkcaller() and self == rem and method == "fireServer" then
 				return wait(9e9)
 			end
+			self=nil
 			return h1(...)
 		end)
 		local h2;h2=hookfunction(rem.FireServer, function(...)
@@ -504,6 +517,7 @@ getgenv().europa = {
 			if not checkcaller() and self == rem then
 				return wait(9e9)
 			end
+			self=nil
 			return h2(...)
 		end)
 	end,
@@ -514,6 +528,7 @@ getgenv().europa = {
 			if not checkcaller() and self == evn and method == "invokeServer" then
 				return wait(9e9)
 			end
+			self=nil
 			return h1(...)
 		end)
 		local h2;h2=hookfunction(evn.InvokeServer, function(...)
@@ -521,6 +536,7 @@ getgenv().europa = {
 			if not checkcaller() and self == evn then
 				return wait(9e9)
 			end
+			self=nil
 			return h2(...)
 		end)
 	end,
@@ -540,6 +556,7 @@ getgenv().europa = {
 			if not checkcaller() and self == stats and type(arg) == "string" and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\0" or (not stats:FindFirstChild("instanceCount") and (arg == "instanceCount" or arg:sub(1,14) == "instanceCount\0"))) then
 				return org
 			end
+			self,arg=nil,nil
 			return h1(...)
 		end)
 	end,
@@ -550,6 +567,7 @@ getgenv().europa = {
 			if not checkcaller() and self == game and method == "getService" then
 				return objtoreturn or wait(9e9)
 			end
+			self=nil
 			return h1(...)
 		end)
 		local h2;h2=hookfunction(game.GetService, function(...)
@@ -557,6 +575,7 @@ getgenv().europa = {
 			if not checkcaller() and a == game and b == name then
 				return objtoreturn or wait(9e9)
 			end
+			a,b=nil,nil
 			return h2(...)
 		end)
 	end,
