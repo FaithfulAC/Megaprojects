@@ -59,8 +59,8 @@ getgenv().europa = {
 		end
 		local h;h=hookmetamethod(game,"__index", function(...)
 			local self, arg = ...
-			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.upper)) or setmetatable({},{__namecall=function()return false end})
-			if not checkcaller() and self == guis and _arg == "MenuIsOpen" or _arg:sub(1, 11) == "MenuIsOpen\0" then
+			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.lower)) or setmetatable({},{__namecall=function()return false end})
+			if not checkcaller() and self == guis and _arg == "menuIsOpen" or _arg:sub(1, 11) == "menuIsOpen\0" then
 				return true
 			end
 			self,arg=nil,nil
@@ -155,8 +155,8 @@ getgenv().europa = {
 		end)
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.upper)
-			if not checkcaller() and self == stats and method == "GetTotalMemoryUsageMb" then
+			local method = getnamecallmethod():gsub("^%u", string.lower)
+			if not checkcaller() and self == stats and method == "getTotalMemoryUsageMb" then
 				return ret
 			end
 			self=nil
@@ -262,7 +262,7 @@ getgenv().europa = {
 			end
 		end)
 	end,
-	setfncintbl = function(gtbl, fncname: string, newfnc)
+	setvarintbl = function(gtbl, varname: string, newvar)
 		local istbl = nil
 		local target do
 			if type(gtbl) == "string" then
@@ -272,16 +272,16 @@ getgenv().europa = {
 				for i, v in getrenv() do if v == gtbl then target = v break end end
 				istbl = true
 			else
-				return error("invalid argument #1 to 'setfunctionintable' (table or string expected)")
+				return error("bad argument #1 to 'setvarintable' (table or string expected)")
 			end
 		end
 		local unpacktbl = {unpack(target)}
-		unpacktbl[fncname] = nil
+		unpacktbl[varname] = nil
 		if istbl then
 			for i, v in getrenv() do
 				if v == gtbl then
 					getrenv()[i] = {
-						[fncname] = newfnc, unpack(unpacktbl)
+						[varname] = varfnc, unpack(unpacktbl)
 					}
 					break
 				end
@@ -302,8 +302,8 @@ getgenv().europa = {
 		-- do spoofconns(true/false) then disconn(examplesignal)
 		local h;h=hookmetamethod(Instance.new("Part").Changed:Connect(function()end),"__index", function(...)
 			local self, arg = ...
-			if not checkcaller() and type(arg) == "string" and arg == "Connected" or arg:sub(1,10) == "Connected\0" then
-				return if waithook then error() else true -- no wait(9e9) :(
+			if not checkcaller() and type(arg) == "string" and arg:gsub("^%u",string.lower) == "connected" or arg:gsub("^%u",string.lower):sub(1,10) == "connected\0" then
+				return if waithook then pcall(function() wait(9e9) end) else true -- no wait(9e9) :(
 			end
 			self,arg=nil
 			return h(...)
@@ -338,9 +338,8 @@ getgenv().europa = {
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and type(rawget(getmetatable(v), "__mode")) == "string" and rawget(getmetatable(v), "__mode"):find("v") then
 				if table.isfrozen(v) or table.isfrozen(getmetatable(v)) then continue end
-				local temp = rawget(getmetatable(v),"__mode")
-				v = {}
-				setmetatable(v,{__mode = temp})
+				local var = rawget(getmetatable(v),"__mode")
+				setmetatable(v,{__mode = var,__index = function() return nil, pcall(wait,9e9) end})
 			end
 		end
 	end,
@@ -368,6 +367,7 @@ getgenv().europa = {
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and (rawget(getmetatable(v), "__mode") == "v" or rawget(getmetatable(v), "__mode") == "kv") then
 				if table.isfrozen(v) then continue end
+				task.wait()
 				table.clear(v)
 			end
 		end
@@ -407,8 +407,8 @@ getgenv().europa = {
 		end)
 		local h2;h2=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.upper)
-			if self == rem and method == "FireServer" then
+			local method = getnamecallmethod():gsub("^%u", string.lower)
+			if self == rem and method == "fireServer" then
 				args = {...}
 			end
 			self=nil
@@ -715,7 +715,7 @@ europa["getluafunctions"] = europa.getlfunctions
 europa["isnilinstance"] = europa.isnil
 europa["setmemoryinflation"] = europa.setmeminflation
 europa["setmemorytaginflation"] = europa.setmemtaginflation
-europa["setfunctionintable"] = europa.setfncintbl
+europa["setvariableintable"] = europa.setvarintbl
 europa["disconnect"] = europa.disconn
 europa["spoofconnections"] = europa.spoofconns
 europa["hookfireserver"] = europa.hookfs
