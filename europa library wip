@@ -415,8 +415,8 @@ getgenv().europa = {
 			return h2(...)
 		end)
 		while args == nil and task.wait() do end
-		h=hookfunction(rem.FireServer, function(...) return h(...) end)
-		h2=hookmetamethod(game,"__namecall", function(...) return h2(...) end)
+		hookfunction(rem.FireServer, h)
+		hookmetamethod(game,"__namecall", h2)
 		return unpack(args)
 	end,
 	gettables = if not getgc then nil else function()
