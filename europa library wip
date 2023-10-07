@@ -1,6 +1,7 @@
 getgenv().europa = {
 	Players = game:GetService("Players"),
 	LocalPlayer = game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait(),
+	hookfunc = hookfunction,
 	gs = function(classname: string)
 		return game:GetService(classname)
 	end,
@@ -118,7 +119,7 @@ getgenv().europa = {
 			end
 		end
 
-		local range1 = Stats().InstanceCount
+		local range1 = game:GetService("Stats").InstanceCount
 		local range2 = range1 + math.random(1000, 3000)
 
 		task.spawn(function()
@@ -281,14 +282,14 @@ getgenv().europa = {
 			for i, v in getrenv() do
 				if v == gtbl then
 					getrenv()[i] = {
-						[varname] = varfnc, unpack(unpacktbl)
+						[varname] = newvar, unpack(unpacktbl)
 					}
 					break
 				end
 			end
 		else
 			getrenv()[gtbl] = {
-				[fncname] = newfnc, unpack(unpacktbl)
+				[varname] = newvar, unpack(unpacktbl)
 			}
 		end
 	end,
@@ -316,10 +317,11 @@ getgenv().europa = {
 		return scr.ClassName == "Script" and scr.RunContext ~= Enum.RunContext.Client
 	end,
 	antihttp = function(grabArgs: boolean)
+		local _i = request or httprequest or http_request
 		if not grabArgs then
-			getgenv().httprequest = nil
+			getgenv()[_i] = nil
 		else
-			getgenv().httprequest = function(tbl)
+			getgenv()[_i] = function(tbl)
 				warn("httprequest was triggered! Here are the arguments:")
 				
 				if type(tbl) == "table" then
@@ -381,10 +383,19 @@ getgenv().europa = {
 			end
 		end
 	end,
-	getscripts = if not getinstances then nil else function()
+	getscripts = if not getinstances then nil else getscripts or function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if (pcall(v.IsA, v, "Instance")) and v:IsA("LocalScript") or v:IsA("ModuleScript") or v:IsA("Script") then
+			if typeof(v) == "Instance" and v:IsA("LocalScript") or v:IsA("ModuleScript") then
+				table.insert(tbl, v)
+			end
+		end
+		return tbl
+	end,
+	getserverscripts = if not getinstances then nil else function()
+		local tbl = {}
+		for i, v in getinstances() do
+			if typeof(v) == "Instance" and  v:IsA("Script") then
 				table.insert(tbl, v)
 			end
 		end
@@ -393,7 +404,7 @@ getgenv().europa = {
 	getrems = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
-			if (pcall(v.IsA, v, "Instance")) and v:IsA("RemoteEvent") then
+			if typeof(v) == "Instance" and v:IsA("RemoteEvent") then
 				table.insert(tbl, v)
 			end
 		end
@@ -415,8 +426,8 @@ getgenv().europa = {
 			return h2(...)
 		end)
 		while args == nil and task.wait() do end
-		h=hookfunction(rem.FireServer, function(...) return h(...) end)
-		h2=hookmetamethod(game,"__namecall", function(...) return h2(...) end)
+		hookfunction(rem.FireServer, h)
+		hookmetamethod(game,"__namecall", h2)
 		return unpack(args)
 	end,
 	gettables = if not getgc then nil else function()
@@ -474,13 +485,13 @@ getgenv().europa = {
 		local plr = game:GetService("Players").LocalPlayer
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
-			if not checkcaller() and self == plr and getnamecallmethod():lower() == "kick" then
+			if not checkcaller() and self == plr and (getnamecallmethod() == "Kick" or getnamecallmethod() == "kick") then
 				return wait(9e9)
 			end
 			self=nil
 			return h1(...)
 		end)
-		local h2;h2=hookfunction(game:GetService("Players").LocalPlayer.Kick, function(...)
+		local h2;h2=hookfunction(plr.Kick, function(...)
 			local self = ...
 			if not checkcaller() and self == plr then
 				return wait(9e9)
@@ -547,7 +558,7 @@ getgenv().europa = {
 		local stats = game:GetService("Stats")
 		local org = stats.InstanceCount
 		task.spawn(function()
-			while task.wait(.01) do
+			while task.wait(.05) do
 				org += math.random(-100, 101)
 			end
 		end)
