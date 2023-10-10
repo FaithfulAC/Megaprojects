@@ -695,14 +695,15 @@ getgenv().europa = {
 	loadsecuredex = function() -- warning: environment leaks may happen
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
 	end,
-	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v3
-		local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
-		getgenv().hookfunction = function()end
-		getgenv().hookmetamethod = function()end
+	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v3 with cloneref
+		local txt = game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/Bypasses.lua",true)
+		local h; h = hookfunction(getgenv().loadstring, function(a)
+			if a == txt then return function()end end
+			return h(a)
+		end
+
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
-		task.wait(.5)
-		getgenv().hookfunction = hf
-		getgenv().hookmetamethod = hmm
+		hookfunction(getgenv().loadstring, h)
 	end,
 	loadss = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
