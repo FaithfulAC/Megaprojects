@@ -341,11 +341,12 @@ getgenv().europa = {
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and type(rawget(getmetatable(v), "__mode")) == "string" and rawget(getmetatable(v), "__mode"):find("v") then
 				if table.isfrozen(v) or table.isfrozen(getmetatable(v)) then continue end
 				local var = rawget(getmetatable(v),"__mode")
-				setmetatable(v,{__mode = var,__index = function() return nil, pcall(wait,9e9) end})
+				local fnc = function() return nil,nil,nil,pcall(task.wait) end
+				setmetatable(v,{__mode = var, __index = fnc, __len = fnc})
 			end
 		end
 	end,
-	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean)
+	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean) -- detectable/avoidable if u use kv
 		local h;h=hookfunction(getrenv().setmetatable, function(...)
 			local tbl1, tbl2 = ...
 			if not checkcaller() and type(tbl1) == "table" and type(tbl2) == "table" and rawlen(tbl1) > 0 and (if checkMetaAmnt then rawlen(tbl2) == 1 else true) then
