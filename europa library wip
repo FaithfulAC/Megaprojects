@@ -348,19 +348,19 @@ getgenv().europa = {
 	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean)
 		local h;h=hookfunction(getrenv().setmetatable, function(...)
 			local tbl1, tbl2 = ...
-			if not checkcaller() and type(tbl1) == "table" and type(tbl2) == "table" and #tbl1 > 0 and (if checkMetaAmnt then #tbl2 == 1 else true) then
+			if not checkcaller() and type(tbl1) == "table" and type(tbl2) == "table" and rawlen(tbl1) > 0 and (if checkMetaAmnt then rawlen(tbl2) == 1 else true) then
 				local isMode = false
 				local var = nil
 				for i, v in pairs(tbl2) do -- Member table.foreachi is deprecated :(
-					if i == "__mode" and (v:find("v")) then var = v; isMode = true end
+					if i == "__mode" and (type(v) == "string" and string.find(v, "v")) then var = v; isMode = true end
 				end
 				if isMode then
-					local tbl = {__mode = var}
-					local target = {}
-					for i = 1, #tbl1 do
-						table.insert(target, newproxy(true))
-					end
-					return setmetatable(target, tbl)
+					local res = h(...)
+					task.spawn(function()
+						task.wait(math.random(1,3)/10)
+						table.clear(res)
+					end)
+					return res
 				end
 			end
 			tbl1,tbl2=nil
