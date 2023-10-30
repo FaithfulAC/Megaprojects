@@ -141,7 +141,7 @@ getgenv().europa = {
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return ret
 			end
-			cnt=nil -- thanks wheat for making my bypasses even less detectable
+			cnt = nil -- kv???
 			return h2(...)
 		end)
 	end,
