@@ -1,18 +1,141 @@
 getgenv().europa = {
-	Players = game:GetService("Players"),
+	Players = (cloneref and cloneref(game:GetService("Players"))) or game:GetService("Players"),
 	LocalPlayer = game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait(),
 	hookfunc = hookfunction,
-	gs = function(classname: string)
+	
+	getcharacter = function()
+		local LocalPlayer = LocalPlayer or game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait()
+		return (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()) 
+	end,
+	
+	gethumanoid = function()
+		if getcharacter then
+			local char = getcharacter()
+			
+			return char:FindFirstChildWhichIsA("Humanoid") or char:WaitForChild("Humanoid")
+		else
+			return game:GetService("Players").LocalPlayer and (game:GetService("Players").LocalPlayer.Character or game:GetService("Players").LocalPlayer.CharacterAdded:Wait())
+				and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") or game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid")
+		end
+	end,
+	
+	FindFirstDataModelDescendantOfClass = function(class: string)
+		for i, v in pairs(game:GetDescendants()) do
+			if v.ClassName == class then
+				return v
+			end
+		end
+		return nil
+	end,
+	
+	FindFirstNilDescendantOfClass = if not getnilinstances then nil else function(class: string) -- this excludes datamodel for nil instances
+		for i, v in pairs(getnilinstances()) do
+			if v.ClassName == class then
+				return v
+			end
+		end
+		return nil
+	end,
+	
+	firesignal = firesignal or function(conn,...)
+		return (type(conn.Function) == "function" and conn.Function(...)) or error("Passed value is not a RBXScriptConnection")
+	end,
+	
+	firetouchinterest = firetouchinterest or function(part, opart, numtype)
+		if numtype == 1 then
+			return nil; -- this fti implementation will only operate on 0 because it already does a TouchEnded firing
+		end
+		-- getconnections implementation or touchinterest parenting implementation
+		
+		if getconnections then
+			for i, v in next, getconnections(opart.Touched) do
+				firesignal(v, part)
+			end
+			
+			for i, v in next, getconnections(opart.TouchEnded) do
+				firesignal(v, part)
+			end
+		else
+			local garbage = Instance.new("Part", workspace)
+			
+			garbage.Transparency, garbage.CanCollide, garbage.Anchored, garbage.Size = 1, false, true, Vector3.new(1,1,1)
+			garbage.Name = math.random() -- auto tostring so doesnt matter :sunglasses:
+			
+			local interest = opart:FindFirstChildWhichIsA("TouchInterest")
+			if interest then
+				-- touchinterest thing
+				interest.Parent = garbage.Parent
+				for i = 1, 3 do
+					garbage.CFrame = part.CFrame
+				end
+				
+				task.wait()
+				interest.Parent = opart.Parent
+				garbage:Destroy()
+			else
+				-- force cframe to part
+				local org = opart.CFrame
+				for i = 1, 10 do
+					opart.CFrame = part.CFrame
+				end
+				
+				for i = 1, 1000 do end
+				opart.CFrame = org
+			end
+		end
+	end,
+	
+	replacehookmetamethod = function()
+		getgenv().hookmetamethod = function(...)
+			local object, metamethod, func = ...
+			local meta = getrawmetatable(object)
+			local orgmetamethod = meta[metamethod]
+
+			setreadonly(meta, false)
+			meta[metamethod] = func
+
+			setreadonly(meta, true)
+			return orgmetamethod
+		end
+	end,
+	
+	clonefunction = clonefunc or clonefunction or clone_function or function(fnc)
+		return
+			if islclosure(fnc) then newcclosure(fnc)
+
+			else function(...)
+				return fnc(...)
+			end;
+	end,
+	
+	-- this function is probably useless
+	rawinsequal = function(ins1, ins2, metablacklist: any) -- metablacklist is so using this will not stack overflow usage of it in a hookmm
+		if ins1 == ins2 then return true end
+		
+		if metablacklist == "__index" then
+			return ins1:GetFullName() == ins2:GetFullName() and ins1:GetDebugId(36) == ins2:GetDebugId(36)
+		else
+			local GetFullName = game.GetFullName
+			local GetDebugId = game.GetDebugId
+			
+			return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1) == GetDebugId(ins2)
+		end
+	end,
+	
+	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
 		return game:GetService(classname)
 	end,
+	
 	getcs = function()
 		return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 	end,
+	
 	checkvar = function(method: string, str: string): boolean
 		method = method:gsub("^%u", string.lower)
 		str = str:gsub("^%u", string.lower)
-		return method == str or (method:find(str) and method:sub(1, str:len()+1) == str .. "\0")
+		return method == str or (string.find(method, str) and string.sub(method, 1, string.len(str)+1) == str .. "\0")
 	end,
+	
 	getrh = function()
 		--[[if Krnl then
 			if #getconnections(game.DescendantAdded) > 0 then
@@ -26,6 +149,7 @@ getgenv().europa = {
 			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 		end
 	end,
+	
 	hookggoap = if not (hookmetamethod and hookfunction) then nil else function() -- why did i make it return a number bruhhh
 		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
 		local stuff = Instance.new("ScreenGui",pgui)
@@ -53,21 +177,27 @@ getgenv().europa = {
 			return gh1(...)
 		end)
 	end,
+	
 	hookggoap2 = if not (hookmetamethod and hookfunction) then nil else function()
 		local guis = game:GetService("GuiService")
+		
 		for i, v in next, getconnections(guis.MenuClosed) do -- spoofconns maybe? ;)
 			v:Disable()
 		end
+		
 		local h;h=hookmetamethod(game,"__index", function(...)
 			local self, arg = ...
 			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.lower)) or setmetatable({},{__namecall=function()return false end})
+			
 			if not checkcaller() and self == guis and _arg == "menuIsOpen" or _arg:sub(1, 11) == "menuIsOpen\0" then
 				return true
 			end
+			
 			self,arg=nil,nil
 			return h(...)
 		end)
 	end,
+	
 	hookgcinfo = if not hookfunction then nil else function()
 		local mini = 800
 		local max = 1200
@@ -82,6 +212,7 @@ getgenv().europa = {
 				local int = math.random(4, 8)
 				if num < max - math.random(10,30) then num = math.floor(num+int) game.ItemChanged:Wait() num += math.random(1,2) else
 					num = math.floor(math.random(mini - 18, mini + 24))
+					
 					game.ItemChanged:Wait()
 					num += 1
 				end
@@ -96,10 +227,12 @@ getgenv().europa = {
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return num
 			end
+			
 			cnt=nil
 			return h2(...)
 		end)
 	end,
+	
 	hookgcinfo2 = if not hookfunction then nil else function() -- more realistic and less detectable by itemchanged
 		local ret
 		local max = gcinfo()+math.random(
@@ -126,8 +259,10 @@ getgenv().europa = {
 			while game:GetService("RunService").Heartbeat:Wait() do
 				if ret > max + math.random(-50,50) then decrease() end
 				ret += math.floor(math.random(range1,range2)/10000)
+				
 				game.ItemChanged:Wait()
 				ret += math.random(2)
+				
 				game.ItemChanged:Wait()
 				ret += 1
 			end
@@ -138,13 +273,16 @@ getgenv().europa = {
 		end)
 		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
 			local cnt = ...
+			
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return ret
 			end
-			cnt = nil -- kv???
+			
+			cnt=nil -- thanks wheat for making my bypasses even less detectable
 			return h2(...)
 		end)
 	end,
+	
 	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
 		local stats = game:GetService("Stats")
 		local ret = stats:GetTotalMemoryUsageMb()
@@ -157,9 +295,11 @@ getgenv().europa = {
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.lower)
+			
 			if not checkcaller() and self == stats and method == "getTotalMemoryUsageMb" then
 				return ret
 			end
+			
 			self=nil
 			return h1(...)
 		end)
@@ -168,22 +308,28 @@ getgenv().europa = {
 			if not checkcaller() and self == stats then
 				return ret
 			end
+			
 			self=nil
 			return h2(...)
 		end)
 	end,
+	
 	getmem = function()
 		return game:GetService("Stats"):GetTotalMemoryUsageMb()
 	end,
+	
 	getmemtag = function(enum: EnumItem)
 		return game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
 	end,
+	
 	setmeminflation = function(bool: boolean)
 		local memconn = getgenv().meminflateconn
+		
 		if bool == false then
 			if memconn then memconn:Disconnect() getgenv().meminflateconn = nil end
 			return
 		end
+		
 		getgenv().meminflateconn = game:GetService("RunService").Stepped:Connect(function()
 			for i = 1, 100 do
 				local part = Instance.new("Part")
@@ -198,6 +344,7 @@ getgenv().europa = {
 			end
 		end)
 	end,
+	
 	setmemtaginflation = function(bool: boolean, enum: Enum) -- only supports script and gui lol (default is gui)
 		local scrfunc = getgenv().memtagscriptfunc
 		local guifunc = getgenv().memtagguifunc
@@ -234,26 +381,24 @@ getgenv().europa = {
 			end)
 		end
 	end,
+	
 	isalive = isalive or function(): boolean -- thank u electron for the idea :))))))))))
 		return game:GetService("Stats").DataSendKbps ~= 0 and game:GetService("Stats").DataReceiveKbps ~= 0
 	end,
+	
 	setgcinflation = function(bool: boolean)
 		local tbl = getgenv().gcinflationtable
+		
 		if bool == false then
 			if tbl then table.clear(tbl) getgenv().gcinflationtable = nil end
 			return
 		end
 		getgenv().gcinflationtable = {}
+		
 		task.spawn(function()
 			while getgenv().gcinflationtable do
 				for i = 1, math.random(100,200) do
-					table.insert(getgenv().gcinflationtable or {}, (function()
-						local str = ""
-						for i = 1, math.random(10,20) do
-							str = str .. string.char(math.random(32, 126))
-						end
-						return str
-					end)())
+					table.insert(getgenv().gcinflationtable or {}, table.create(150, ""))
 					task.wait()
 				end
 				if math.random() > 0.7 then
@@ -263,8 +408,10 @@ getgenv().europa = {
 			end
 		end)
 	end,
+	
 	setvarintbl = function(gtbl, varname: string, newvar)
 		local istbl = nil
+		
 		local target do
 			if type(gtbl) == "string" then
 				target = getrenv()[gtbl]
@@ -276,8 +423,10 @@ getgenv().europa = {
 				return error("bad argument #1 to 'setvarintable' (table or string expected)")
 			end
 		end
+		
 		local unpacktbl = {unpack(target)}
 		unpacktbl[varname] = nil
+		
 		if istbl then
 			for i, v in getrenv() do
 				if v == gtbl then
@@ -293,11 +442,13 @@ getgenv().europa = {
 			}
 		end
 	end,
+	
 	disconn = function(conn)
 		for i, v in next, getconnections(conn) do
 			v:Disable()
 		end
 	end,
+	
 	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(waithook: boolean)
 		-- unfortunately unable to determine the connection to disconnect so this is for all connections
 		-- do spoofconns(true/false) then disconn(examplesignal)
@@ -310,14 +461,18 @@ getgenv().europa = {
 			return h(...)
 		end)
 	end,
+	
 	clientran = function(scr: Instance)
 		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and scr.RunContext == Enum.RunContext.Client)
 	end,
+	
 	serverran = function(scr: Instance)
 		return scr.ClassName == "Script" and scr.RunContext ~= Enum.RunContext.Client
 	end,
+	
 	antihttp = function(grabArgs: boolean)
 		local _i = request or httprequest or http_request
+		
 		if not grabArgs then
 			getgenv()[_i] = nil
 		else
@@ -336,45 +491,71 @@ getgenv().europa = {
 			end
 		end
 	end,
+	
 	antiweaktable = if not getgc then nil else function()
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and type(rawget(getmetatable(v), "__mode")) == "string" and rawget(getmetatable(v), "__mode"):find("v") then
 				if table.isfrozen(v) or table.isfrozen(getmetatable(v)) then continue end
+				
 				local var = rawget(getmetatable(v),"__mode")
-				local fnc = function() return nil,nil,nil,pcall(task.wait) end
-				setmetatable(v,{__mode = var, __index = fnc, __len = fnc})
+				setmetatable(v,{
+					__mode = var,
+					__index = function()
+						error("Don't worry about it ;)")
+					end
+				})
 			end
 		end
 	end,
-	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean) -- detectable/avoidable if u use kv
-		local h;h=hookfunction(getrenv().setmetatable, function(...)
+	
+	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean)
+		local h; h = hookfunction(getrenv().setmetatable, function(...)
 			local tbl1, tbl2 = ...
+			
 			if not checkcaller() and type(tbl1) == "table" and type(tbl2) == "table" and rawlen(tbl1) > 0 and (if checkMetaAmnt then rawlen(tbl2) == 1 else true) then
 				local isMode = false
 				local var = nil
+				
 				for i, v in pairs(tbl2) do -- Member table.foreachi is deprecated :(
-					if i == "__mode" and (type(v) == "string" and string.find(v, "v")) then var = v; isMode = true end
+					if i == "__mode" and type(v) == "string" and string.find(v, "v") then var = v; isMode = true end
 				end
+				
 				if isMode then
 					local res = h(...)
-					task.spawn(function()
-						task.wait(math.random(1,3)/10)
-						table.clear(res)
-					end)
+					
+					local targetfnc = if not string.find(var, "k") then
+						function()
+							task.wait(math.random(5,8)/10)
+							table.clear(res)
+						end
+					else
+					function()
+						task.wait(math.random(5,8)/10)
+						for i, v in pairs(res) do
+							if typeof(v) == "Instance" then
+								rawset(res, i, nil)
+							end
+						end
+					end
+					
+					task.spawn(targetfnc)
 					return res
 				end
 			end
-			tbl1,tbl2=nil
+			
+			tbl1,tbl2=nil,nil
 			return h(...)
 		end)
 		for i, v in getgc(true) do
 			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and (rawget(getmetatable(v), "__mode") == "v" or rawget(getmetatable(v), "__mode") == "kv") then
 				if table.isfrozen(v) then continue end
+				
 				task.wait()
 				table.clear(v)
 			end
 		end
 	end,
+	
 	antitostring = if not getgc then nil else function() -- fixing krnl decompiler detection i hope
 		for i, v in getgc(true) do
 			if type(v) == "table" and type(getmetatable(v)) == "table" and not table.isfrozen(v) and not table.isfrozen(getmetatable(v)) then
@@ -384,6 +565,7 @@ getgenv().europa = {
 			end
 		end
 	end,
+	
 	getscripts = if not getinstances then nil else getscripts or function()
 		local tbl = {}
 		for i, v in getinstances() do
@@ -393,6 +575,7 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	getserverscripts = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
@@ -402,6 +585,7 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	getrems = if not getinstances then nil else function()
 		local tbl = {}
 		for i, v in getinstances() do
@@ -411,26 +595,32 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent) -- local a = {grabargs(rem)}
 		local args = nil
 		local h;h=hookfunction(rem.FireServer, function(...)
-			args = {...}
+			args = {select(2,...)}
 			return h(...)
 		end)
 		local h2;h2=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.lower)
+			
 			if self == rem and method == "fireServer" then
-				args = {...}
+				args = {select(2,...)}
 			end
 			self=nil
+			
 			return h2(...)
 		end)
 		while args == nil and task.wait() do end
+		
 		hookfunction(rem.FireServer, h)
 		hookmetamethod(game,"__namecall", h2)
+		
 		return unpack(args)
 	end,
+	
 	gettables = if not getgc then nil else function()
 		local tbl = {} -- lol
 		for i, v in getgc(true) do
@@ -440,6 +630,7 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	getmetatables = if not getgc then nil else function()
 		local tbl = {}
 		for i, v in getgc(true) do
@@ -449,6 +640,7 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	getfunctions = if not getgc then nil else function()
 		local tbl = {}
 		for i, v in getgc() do
@@ -458,6 +650,7 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	getlfunctions = if not (getgc and islclosure) then nil else function()
 		local tbl = {}
 		for i, v in getgc() do
@@ -467,6 +660,7 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	getcfunctions = if not (getgc and iscclosure) then nil else function()
 		local tbl = {}
 		for i, v in getgc() do
@@ -476,12 +670,15 @@ getgenv().europa = {
 		end
 		return tbl
 	end,
+	
 	breakjoints = function()
 		return game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Character and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid"):BreakJoints()
 	end,
+	
 	isnil = function(a: Instance)
 		return a.Parent == nil
 	end,
+	
 	antikick = if not (hookmetamethod and hookfunction) then nil else function()
 		local plr = game:GetService("Players").LocalPlayer
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
@@ -501,6 +698,7 @@ getgenv().europa = {
 			return h2(...)
 		end)
 	end,
+	
 	removehooks = function(duration: number)
 		task.spawn(function()
 			local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
@@ -511,9 +709,11 @@ getgenv().europa = {
 			getgenv().hookmetamethod = hmm
 		end)
 	end,
+	
 	anticrash = function()
 		return game:GetService("ScriptContext"):SetTimeout(1)
 	end,
+	
 	hookfs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent)
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
@@ -533,6 +733,7 @@ getgenv().europa = {
 			return h2(...)
 		end)
 	end,
+	
 	hookis = if not (hookmetamethod and hookfunction) then nil else function(evn: RemoteFunction)
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
@@ -552,9 +753,11 @@ getgenv().europa = {
 			return h2(...)
 		end)
 	end,
+	
 	ls = function(url: string)
 		return loadstring(game:HttpGet(url))()
 	end,
+	
 	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
 		local stats = game:GetService("Stats")
 		local org = stats.InstanceCount
@@ -572,6 +775,7 @@ getgenv().europa = {
 			return h1(...)
 		end)
 	end,
+	
 	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name: string, objtoreturn: Instance)
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
@@ -591,11 +795,13 @@ getgenv().europa = {
 			return h2(...)
 		end)
 	end,
+	
 	waithookfunc = if not hookfunction then nil else function(fnc)
 		local h;h=hookfunction(fnc, function(...)
 			return if not checkcaller() then wait(9e9) else h(...)
 		end)
 	end,
+	
 	antibodycheck = function()
 		local char = game:GetService("Players").LocalPlayer.Character
 		local root, torso do
@@ -618,6 +824,7 @@ getgenv().europa = {
 		if root then dothing(root) end
 		if torso then dothing(torso) end
 	end,
+	
 	antihumcheck = function() -- can interfere with looping walkspeed
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		for i, v in next, getconnections(hum.Changed) do
@@ -636,6 +843,7 @@ getgenv().europa = {
 			v:Disable()
 		end
 	end,
+	
 	setnoclip = function(bool: boolean)
 		if not bool then
 			if noclipconn then
@@ -652,6 +860,7 @@ getgenv().europa = {
 			end)
 		end)
 	end,
+	
 	setws = function(int: number, loopHum: boolean)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum and loopHum then
@@ -664,6 +873,7 @@ getgenv().europa = {
 		end
 		hum.WalkSpeed = int
 	end,
+	
 	setjp = function(int: number, loopHum: boolean)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum and loopHum then
@@ -676,30 +886,111 @@ getgenv().europa = {
 		end
 		hum.JumpPower = int
 	end,
+	
 	setjpenabled = function(bool: boolean)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum then hum.UseJumpPower = bool end
 	end,
+	
 	sethh = function(int: number)
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		if hum then hum.HipHeight = int end
 	end,
+	
 	setgrav = function(int: number)
 		workspace.Gravity = int
 	end,
+	
 	loadiy = function()
 		return loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
 	end,
+	
 	loadcmdx = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source", true))()
 	end,
-	loadsecuredex = function() -- warning: environment leaks may happen
+	
+	loadsecuredex = function() -- warning: superly too many detection vectors possible for this, operate at your own risk
+		
+		-- Cloneref support (adds support for JJsploit/Temple/Electron and other sploits that don't have cloneref or really shit versions of it.)
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/CloneRef.lua", true))()
+
+		-- Dex "Bypasses"
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/Bypasses.lua", true))()
+
+		-- Dex with CloneRef Support (made as global)
+		
+		getgenv().Bypassed_Dex = game:GetObjects("rbxassetid://9352453730")[1]
+		local Bypassed_Dex = Bypassed_Dex
+
+		local charset = {}
+		for i = 48,  57 do table.insert(charset, string.char(i)) end
+		for i = 65,  90 do table.insert(charset, string.char(i)) end
+		for i = 97, 122 do table.insert(charset, string.char(i)) end
+		
+		function RandomCharacters(length)
+			if length > 0 then
+				return RandomCharacters(length - 1) .. charset[math.random(1, #charset)]
+			else
+				return ""
+			end
+		end
+
+		Bypassed_Dex.Name = RandomCharacters(math.random(5, 20))
+		if gethui then
+			Bypassed_Dex.Parent = gethui();
+		elseif syn and syn.protect_gui then
+			syn.protect_gui(Bypassed_Dex);
+			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
+		else
+			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
+		end
+
+		local function Load(Obj, Url)
+			local function GiveOwnGlobals(Func, Script)
+				local Fenv = {}
+				local RealFenv = {script = Script}
+				local FenvMt = {}
+				function FenvMt:__index(b)
+					if RealFenv[b] == nil then
+						return getfenv()[b]
+					else
+						return RealFenv[b]
+					end
+				end
+				function FenvMt:__newindex(b, c)
+					if RealFenv[b] == nil then
+						getfenv()[b] = c
+					else
+						RealFenv[b] = c
+					end
+				end
+				setmetatable(Fenv, FenvMt)
+				setfenv(Func, Fenv)
+				return Func
+			end
+
+			local function LoadScripts(Script)
+				if Script.ClassName == "Script" or Script.ClassName == "LocalScript" then
+					task.spawn(GiveOwnGlobals(loadstring(Script.Source, "=" .. Script:GetFullName()), Script))
+				end
+				for _,v in ipairs(Script:GetChildren()) do
+					LoadScripts(v)
+				end
+			end
+
+			LoadScripts(Obj)
+		end
+
+		Load(Bypassed_Dex)
+		
+	end,
+	
+	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v3 with cloneref and little to no detections occur
 		
 		-- Cloneref support (adds support for JJsploit/Temple/Electron and other sploits that don't have cloneref or really shit versions of it.)
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/CloneRef.lua", true))()
 
 		-- Dex Bypasses (nope! no detections for me please)
-		-- loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/Bypasses.lua", true))()
 
 		-- Dex with CloneRef Support (made as global)
 		getgenv().Bypassed_Dex = game:GetObjects("rbxassetid://9352453730")[1]
@@ -766,79 +1057,15 @@ getgenv().europa = {
 		Load(Bypassed_Dex)
 		
 	end,
-	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v3 with cloneref
-		
-		-- Cloneref support (adds support for JJsploit/Temple/Electron and other sploits that don't have cloneref or really shit versions of it.)
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/CloneRef.lua", true))()
-
-		-- Dex Bypasses (nope! no detections for me please)
-
-		-- Dex with CloneRef Support (made as global)
-		getgenv().Bypassed_Dex = game:GetObjects("rbxassetid://9352453730")[1]
-		local Bypassed_Dex = Bypassed_Dex
-
-		local charset = {}
-		for i = 48,  57 do table.insert(charset, string.char(i)) end
-		for i = 65,  90 do table.insert(charset, string.char(i)) end
-		for i = 97, 122 do table.insert(charset, string.char(i)) end
-		function RandomCharacters(length)
-			if length > 0 then
-				return RandomCharacters(length - 1) .. charset[math.random(1, #charset)]
-			else
-				return ""
-			end
-		end
-
-		Bypassed_Dex.Name = RandomCharacters(math.random(5, 20))
-		if gethui then
-			Bypassed_Dex.Parent = gethui();
-		elseif syn and syn.protect_gui then
-			syn.protect_gui(Bypassed_Dex);
-			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
-		else
-			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
-		end
-
-		local function Load(Obj, Url)
-			local function GiveOwnGlobals(Func, Script)
-				local Fenv = {}
-				local RealFenv = {script = Script}
-				local FenvMt = {}
-				function FenvMt:__index(b)
-					if RealFenv[b] == nil then
-						return getfenv()[b]
-					else
-						return RealFenv[b]
-					end
-				end
-				function FenvMt:__newindex(b, c)
-					if RealFenv[b] == nil then
-						getfenv()[b] = c
-					else
-						RealFenv[b] = c
-					end
-				end
-				setmetatable(Fenv, FenvMt)
-				setfenv(Func, Fenv)
-				return Func
-			end
-
-			local function LoadScripts(Script)
-				if Script.ClassName == "Script" or Script.ClassName == "LocalScript" then
-					task.spawn(GiveOwnGlobals(loadstring(Script.Source, "=" .. Script:GetFullName()), Script))
-				end
-				for _,v in ipairs(Script:GetChildren()) do
-					LoadScripts(v)
-				end
-			end
-
-			LoadScripts(Obj)
-		end
-
-		Load(Bypassed_Dex)
-		
-	end,
-	loadtsdex = function()
+	
+	loadtsdex = function() -- now this here is the real deal, this should be the preset for bypassing in-game anticheats with dex
+		--[[
+		this is meant to bypass almost every top-tier in-game anticheat out there
+		if it does not bypass / is detected then it is your responsibility to bypass it yourself
+		or
+		dm @__europa
+		(unless the detection is made by me lol)
+		]]
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses"))()
 
 		task.wait(.2)
@@ -904,16 +1131,24 @@ getgenv().europa = {
 
 		Load(Dex)
 	end,
+	
 	loadss = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
 	end,
+	
 	loadv4 = function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))()
 	end,
+	
 	rj = function()
 		game:GetService("TeleportService"):Teleport(game.PlaceId)
-	end,
+	end
 }
+
+europa["fti"] = europa.firetouchinterest
+europa["clonefunc"] = europa.clonefunction
+europa["rawinstanceequal"] = europa.rawinsequal
+europa["replacehmm"] = europa.replacehookmetamethod
 europa["getservice"] = europa.gs
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
