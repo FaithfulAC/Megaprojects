@@ -1,3 +1,7 @@
+-- for rawinsequal
+local GetFullName = game.GetFullName
+local GetDebugId = game.GetDebugId
+
 getgenv().europa = {
 	Players = (cloneref and cloneref(game:GetService("Players"))) or game:GetService("Players"),
 	LocalPlayer = game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait(),
@@ -109,17 +113,9 @@ getgenv().europa = {
 	end,
 	
 	-- this function is probably useless
-	rawinsequal = function(ins1, ins2, metablacklist: any) -- metablacklist is so using this will not stack overflow usage of it in a hookmm
+	rawinsequal = function(ins1, ins2)
 		if ins1 == ins2 then return true end
-		
-		if metablacklist == "__index" then
-			return ins1:GetFullName() == ins2:GetFullName() and ins1:GetDebugId(36) == ins2:GetDebugId(36)
-		else
-			local GetFullName = game.GetFullName
-			local GetDebugId = game.GetDebugId
-			
-			return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1) == GetDebugId(ins2)
-		end
+		return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1, 10) == GetDebugId(ins2, 10)
 	end,
 	
 	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
@@ -137,20 +133,14 @@ getgenv().europa = {
 	end,
 	
 	getrh = function()
-		--[[if Krnl then
-			if #getconnections(game.DescendantAdded) > 0 then
-				return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
-			else
-				return gethui()
-			end
-		else]]if gethui and gethui() ~= game:GetService("CoreGui") then -- [[ (._.) ]]
+		if gethui and gethui() ~= game:GetService("CoreGui") then -- [[ (._.) ]]
 			return gethui()
 		else
 			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 		end
 	end,
 	
-	hookggoap = if not (hookmetamethod and hookfunction) then nil else function() -- why did i make it return a number bruhhh
+	hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
 		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
 		local stuff = Instance.new("ScreenGui",pgui)
 		stuff.Name = "TouchGui"
@@ -162,17 +152,21 @@ getgenv().europa = {
 		local gh1;gh1=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.lower)
+			
 			if not checkcaller() and self == pgui and method == "getGuiObjectsAtPosition" then
 				return {stuff2}
 			end
+			
 			self=nil
 			return gh1(...)
 		end)
 		local gh2;gh2=hookfunction(pgui.GetGuiObjectsAtPosition, function(...)
 			local arg = ...
+			
 			if not checkcaller() and arg == pgui then
 				return {stuff2}
 			end
+			
 			arg=nil
 			return gh1(...)
 		end)
@@ -233,8 +227,7 @@ getgenv().europa = {
 		end)
 	end,
 	
-	hookgcinfo2 = if not hookfunction then nil else function() -- more realistic and less detectable by itemchanged
-		local ret
+	hookgcinfo2 = if not hookfunction then nil else function() -- more realistic and less detectable by itemchanged		
 		local max = gcinfo()+math.random(
 			math.floor(gcinfo()/6),
 			math.floor(gcinfo()/4)
@@ -243,42 +236,59 @@ getgenv().europa = {
 			math.floor(gcinfo()/6),
 			math.floor(gcinfo()/4)
 		)
-		ret = gcinfo()
+		
+		-- this is so the value can be additionally made even more realistic so any detection bypasses can be easily adapted upon	
+		getgenv().SpoofedGcReturn = gcinfo()
 
 		local function decrease()
 			for i = 1, 4 do
-				ret = max - math.floor(((max - mini*1.25)*(i/4))+math.random(-20,20))
+				getgenv().SpoofedGcReturn = max - math.floor(((max - mini*1.25)*(i/4))+math.random(-20,20))
 				task.wait(math.random(25,45)/1000)
 			end
 		end
 
 		local range1 = game:GetService("Stats").InstanceCount
 		local range2 = range1 + math.random(1000, 3000)
+		
+		local clock = os.clock
 
 		task.spawn(function()
-			while game:GetService("RunService").Heartbeat:Wait() do
-				if ret > max + math.random(-50,50) then decrease() end
-				ret += math.floor(math.random(range1,range2)/10000)
+			while '' do
+				if getgenv().SpoofedGcReturn > max + math.random(-50,50) then decrease() end
+				getgenv().SpoofedGcReturn += math.floor(math.random(range1,range2)/10000)
 				
-				game.ItemChanged:Wait()
-				ret += math.random(2)
+				local cont, passby = false, clock()
 				
-				game.ItemChanged:Wait()
-				ret += 1
+				local temp = game.ItemChanged:Once(function()
+					getgenv().SpoofedGcReturn += math.random(2)
+					
+					game.ItemChanged:Once(function()
+						getgenv().SpoofedGcReturn += 1
+						cont = true
+					end)
+				end)
+				
+				repeat task.wait() until cont or clock() - passby > 0.05
+				
+				if clock() - passby > 0.05 then
+					getgenv().SpoofedGcReturn += math.random(2)
+				end
+				temp:Disconnect()
 			end
 		end)
 
 		local h1;h1=hookfunction(getrenv().gcinfo, function(...)
-			return if not checkcaller() then ret else h1(...)
+			return if not checkcaller() then getgenv().SpoofedGcReturn else h1(...)
 		end)
+		
 		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
 			local cnt = ...
 			
-			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
-				return ret
+			if not checkcaller() and type(cnt) == "string" and string.split(cnt, "\0")[1] == "count" then
+				return getgenv().SpoofedGcReturn
 			end
 			
-			cnt=nil -- thanks wheat for making my bypasses even less detectable
+			cnt=nil
 			return h2(...)
 		end)
 	end,
