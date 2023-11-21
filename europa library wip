@@ -22,6 +22,10 @@ getgenv().europa = {
 				and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") or game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid")
 		end
 	end,
+
+	HasCoreGuiPerms = function()
+		return pcall(function() GetFullName(game:GetService("CoreGui")) end)
+	end
 	
 	FindFirstDataModelDescendantOfClass = function(class: string)
 		for i, v in pairs(game:GetDescendants()) do
