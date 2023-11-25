@@ -185,7 +185,7 @@ getgenv().europa = {
 		
 		local h;h=hookmetamethod(game,"__index", function(...)
 			local self, arg = ...
-			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.lower)) or setmetatable({},{__namecall=function()return false end})
+			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.lower)) or {sub = function() return "" end}
 			
 			if not checkcaller() and self == guis and _arg == "menuIsOpen" or _arg:sub(1, 11) == "menuIsOpen\0" then
 				return true
@@ -221,7 +221,7 @@ getgenv().europa = {
 			return h(...)
 		end)
 		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
-			local cnt = ... -- anti void detection
+			local cnt = ...
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return num
 			end
