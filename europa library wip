@@ -22,7 +22,7 @@ getgenv().europa = {
 				and game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") or game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid")
 		end
 	end,
-
+	
 	HasCoreGuiPerms = function()
 		return pcall(function() GetFullName(game:GetService("CoreGui")) end)
 	end
@@ -185,7 +185,7 @@ getgenv().europa = {
 		
 		local h;h=hookmetamethod(game,"__index", function(...)
 			local self, arg = ...
-			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.lower)) or {sub = function() return "" end}
+			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.lower)) or setmetatable({},{__namecall=function()return false end})
 			
 			if not checkcaller() and self == guis and _arg == "menuIsOpen" or _arg:sub(1, 11) == "menuIsOpen\0" then
 				return true
@@ -221,7 +221,7 @@ getgenv().europa = {
 			return h(...)
 		end)
 		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
-			local cnt = ...
+			local cnt = ... -- anti void detection
 			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
 				return num
 			end
@@ -695,20 +695,37 @@ getgenv().europa = {
 	
 	antikick = if not (hookmetamethod and hookfunction) then nil else function()
 		local plr = game:GetService("Players").LocalPlayer
+		local list = stdstringvalues or {
+			"thread", "userdata", "RBXScriptSignal", "RBXScriptConnection", "Vector2", "Vector3", "Enum", "Enums",
+			"Axes", "BrickColor", "Vector2int16", "Vector3int16", "DockWidgetPluginGuiInfo",
+			"FloatCurveKey", "Font", "Faces", "NumberRange", "NumberSequenceKeypoint", "NumberSequence",
+			"OverlapParams", "PathWaypoint", "PhysicalProperties", "Random", "Ray", "Region3", "Region3int16", "RotationCurveKey",
+			"Rect", "SharedTable", "TweenInfo", "UDim", "UDim2"
+		}
+		
 		local h1;h1=hookmetamethod(game,"__namecall", function(...)
-			local self = ...
+			local self, arg = ...
+			
 			if not checkcaller() and self == plr and (getnamecallmethod() == "Kick" or getnamecallmethod() == "kick") then
-				return wait(9e9)
+				if not table.find(list, typeof(arg)) then
+					return wait(9e9)
+				end
 			end
-			self=nil
+			
+			self,arg = nil,nil
 			return h1(...)
 		end)
+		
 		local h2;h2=hookfunction(plr.Kick, function(...)
-			local self = ...
+			local self, arg = ...
+			
 			if not checkcaller() and self == plr then
-				return wait(9e9)
+				if not table.find(list, typeof(arg)) then
+					return wait(9e9)
+				end
 			end
-			self=nil
+			
+			self,arg = nil,nil
 			return h2(...)
 		end)
 	end,
