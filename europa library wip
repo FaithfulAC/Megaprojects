@@ -25,7 +25,7 @@ getgenv().europa = {
 	
 	HasCoreGuiPerms = function()
 		return pcall(function() GetFullName(game:GetService("CoreGui")) end)
-	end
+	end,
 	
 	FindFirstDataModelDescendantOfClass = function(class: string)
 		for i, v in pairs(game:GetDescendants()) do
