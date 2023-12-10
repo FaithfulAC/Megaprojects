@@ -117,7 +117,7 @@ getgenv().europa = {
 	end,
 	
 	-- this function is probably useless
-	rawinsequal = function(ins1, ins2)
+	rawinsequal = compareinstances or function(ins1, ins2)
 		if ins1 == ins2 then return true end
 		return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1, 10) == GetDebugId(ins2, 10)
 	end,
