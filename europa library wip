@@ -2,8 +2,6 @@
 local GetFullName = (clonefunction and clonefunction(game.GetFullName)) or game.GetFullName
 local GetDebugId = (clonefunction and clonefunction(game.GetDebugId)) or game.GetDebugId
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod"))()
-
 getgenv().europa = {
 	Players = (cloneref and cloneref(game:GetService("Players"))) or game:GetService("Players"),
 	LocalPlayer = game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait(),
@@ -45,6 +43,11 @@ getgenv().europa = {
 			end
 		end
 		return nil
+	end,
+
+	loadsafehookmetamethod = function(KeepOriginalFunction: boolean)
+		getgenv().KeepHMM = KeepOriginalFunction
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod"))()
 	end,
 	
 	firesignal = firesignal or function(conn,...)
