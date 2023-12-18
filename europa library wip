@@ -1,6 +1,6 @@
 -- for rawinsequal
-local GetFullName = game.GetFullName
-local GetDebugId = game.GetDebugId
+local GetFullName = (clonefunction and clonefunction(game.GetFullName)) or game.GetFullName
+local GetDebugId = (clonefunction and clonefunction(game.GetDebugId)) or game.GetDebugId
 
 getgenv().europa = {
 	Players = (cloneref and cloneref(game:GetService("Players"))) or game:GetService("Players"),
