@@ -103,7 +103,11 @@ getgenv().europa = {
 	replacehookmetamethod = function()
 		getgenv().hookmetamethod = function(...)
 			local object, metamethod, func = ...
-			local meta = getrawmetatable(object)
+			if type(func) == "function" and islclosure(func) then
+				func = newcclosure(func) -- either get C stack overflow'd or slnaf check'd, i'll go with C stack overflow'd
+			end
+			
+			local meta = (pcall(getrawmetatable, object) and getrawmetatable(object)) or error("Passed value has no valid rawmetatable")
 			local orgmetamethod = meta[metamethod]
 
 			setreadonly(meta, false)
@@ -113,19 +117,32 @@ getgenv().europa = {
 			return orgmetamethod
 		end
 	end,
+	
+	cstackoverflow = if not hookfunction then nil else function(func)
+		for i = 1, 200 do
+			local h; h = hookfunction(func, function(...)
+				return h(...)
+			end)
+			if i == 200 then
+				return h
+			end
+		end
+	end,
 
 	clonefunction = clonefunc or clonefunction or clone_function or function(fnc)
 		return
-			if islclosure(fnc) then newcclosure(fnc)
-
-			else function(...)
+			if islclosure(fnc) then function(...)
 				return fnc(...)
-			end;
+			end
+			else
+			newcclosure(fnc);
 	end,
 
 	-- this function is probably useless
 	rawinsequal = compareinstances or function(ins1, ins2)
+		if typeof(ins1) ~= typeof(ins2) and typeof(ins1) ~= "Instance" then return false end
 		if ins1 == ins2 then return true end
+		
 		return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1, 10) == GetDebugId(ins2, 10)
 	end,
 
@@ -150,8 +167,9 @@ getgenv().europa = {
 			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 		end
 	end,
-
-	hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
+	
+	-- dont use this one or the second just open devconsole and put it off to the side lol
+	--[[hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
 		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
 		local stuff = Instance.new("ScreenGui",pgui)
 		stuff.Name = "TouchGui"
@@ -201,7 +219,7 @@ getgenv().europa = {
 			self,arg=nil,nil
 			return h(...)
 		end)
-	end,
+	end,]]
 
 	hookgcinfo = if not hookfunction then nil else function()
 		local mini = 800
@@ -515,10 +533,10 @@ getgenv().europa = {
 
 	antiweaktable = if not getgc then nil else function()
 		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and type(rawget(getmetatable(v), "__mode")) == "string" and rawget(getmetatable(v), "__mode"):find("v") then
-				if table.isfrozen(v) or table.isfrozen(getmetatable(v)) then continue end
+			if type(v) == "table" and getrawmetatable(v) and type(getrawmetatable(v)) == "table" and type(rawget(getrawmetatable(v), "__mode")) == "string" and rawget(getrawmetatable(v), "__mode"):find("v") then
+				if table.isfrozen(v) or table.isfrozen(getrawmetatable(v)) then continue end
 
-				local var = rawget(getmetatable(v),"__mode")
+				local var = rawget(getrawmetatable(v),"__mode")
 				setmetatable(v,{
 					__mode = var,
 					__index = function()
@@ -568,7 +586,7 @@ getgenv().europa = {
 			return h(...)
 		end)
 		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) and type(getmetatable(v)) == "table" and (rawget(getmetatable(v), "__mode") == "v" or rawget(getmetatable(v), "__mode") == "kv") then
+			if type(v) == "table" and getrawmetatable(v) and type(getrawmetatable(v)) == "table" and (rawget(getrawmetatable(v), "__mode") == "v" or rawget(getrawmetatable(v), "__mode") == "kv") then
 				if table.isfrozen(v) then continue end
 
 				task.wait()
@@ -579,9 +597,9 @@ getgenv().europa = {
 
 	antitostring = if not getgc then nil else function() -- fixing krnl decompiler detection i hope
 		for i, v in getgc(true) do
-			if type(v) == "table" and type(getmetatable(v)) == "table" and not table.isfrozen(v) and not table.isfrozen(getmetatable(v)) then
-				if rawget(getmetatable(v),"__tostring") then
-					table.clear(getmetatable(v))
+			if type(v) == "table" and type(getrawmetatable(v)) == "table" and not table.isfrozen(v) and not table.isfrozen(getrawmetatable(v)) then
+				if rawget(getrawmetatable(v),"__tostring") then
+					table.clear(getrawmetatable(v))
 				end
 			end
 		end
@@ -833,7 +851,7 @@ getgenv().europa = {
 
 	waithookfunc = if not hookfunction then nil else function(fnc)
 		local h;h=hookfunction(fnc, function(...)
-			return if not checkcaller() then wait(9e9) else h(...)
+			return if not checkcaller() and (h ~= coroutine.isyieldable and coroutine.isyieldable()) then wait(9e9) else h(...)
 		end)
 	end,
 
