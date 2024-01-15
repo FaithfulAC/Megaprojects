@@ -51,6 +51,10 @@ getgenv().europa = {
 		getgenv().LoadCSOBypass = not DontLoadCStackOverflowBypass
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod"))()
 	end,
+	
+	loadgetproperties = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties"))()
+	end,
 
 	firesignal = firesignal or function(conn,...)
 		return (type(conn.Function) == "function" and conn.Function(...)) or error("Passed value is not a RBXScriptConnection")
@@ -1220,6 +1224,7 @@ europa["spoofconnections"] = europa.spoofconns
 europa["hookfireserver"] = europa.hookfs
 europa["hookinvokeserver"] = europa.hookis
 europa["hookgetservice"] = europa.hookgs
+europa["quickload"] = europa.ls
 europa["hookinstancecount"] = europa.hookinscount
 europa["waithookfunction"] = europa.waithookfunc
 europa["antihumanoidcheck"] = europa.antihumcheck
