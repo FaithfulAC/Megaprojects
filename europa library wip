@@ -45,6 +45,26 @@ getgenv().europa = {
 		end
 		return nil
 	end,
+	
+	TypeCheck = function(tbl, _type)
+		for i, v in pairs(tbl) do
+			if type(v) ~= _type then
+				return false
+			end
+		end
+		
+		return true
+	end,
+	
+	TypeofCheck = function(tbl, _type)
+		for i, v in pairs(tbl) do
+			if typeof(v) ~= _type then
+				return false
+			end
+		end
+		
+		return true
+	end,
 
 	loadsafehookmetamethod = function(KeepOriginalFunction: boolean, DontLoadCStackOverflowBypass: boolean)
 		getgenv().KeepHMM = KeepOriginalFunction
