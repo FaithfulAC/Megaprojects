@@ -69,11 +69,11 @@ getgenv().europa = {
 	loadsafehookmetamethod = function(KeepOriginalFunction: boolean, DontLoadCStackOverflowBypass: boolean)
 		getgenv().KeepHMM = KeepOriginalFunction
 		getgenv().LoadCSOBypass = not DontLoadCStackOverflowBypass
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua"))()
 	end,
 	
 	loadgetproperties = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties.lua"))()
 	end,
 
 	firesignal = firesignal or function(conn,...)
@@ -1143,7 +1143,7 @@ getgenv().europa = {
 		dm @__europa
 		(unless the detection is made by me lol)
 		]]
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))()
 
 		task.wait(.2)
 
