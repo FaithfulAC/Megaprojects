@@ -45,24 +45,24 @@ getgenv().europa = {
 		end
 		return nil
 	end,
-	
+
 	TypeCheck = function(tbl, _type)
 		for i, v in pairs(tbl) do
 			if type(v) ~= _type then
 				return false
 			end
 		end
-		
+
 		return true
 	end,
-	
+
 	TypeofCheck = function(tbl, _type)
 		for i, v in pairs(tbl) do
 			if typeof(v) ~= _type then
 				return false
 			end
 		end
-		
+
 		return true
 	end,
 
@@ -71,7 +71,7 @@ getgenv().europa = {
 		getgenv().LoadCSOBypass = not DontLoadCStackOverflowBypass
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua"))()
 	end,
-	
+
 	loadgetproperties = function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties.lua"))()
 	end,
@@ -130,7 +130,7 @@ getgenv().europa = {
 			if type(func) == "function" and islclosure(func) then
 				func = newcclosure(func) -- either get C stack overflow'd or slnaf check'd, i'll go with C stack overflow'd
 			end
-			
+
 			local meta = (pcall(getrawmetatable, object) and getrawmetatable(object)) or error("Passed value has no valid rawmetatable")
 			local orgmetamethod = meta[metamethod]
 
@@ -141,7 +141,7 @@ getgenv().europa = {
 			return orgmetamethod
 		end
 	end,
-	
+
 	cstackoverflow = if not hookfunction then nil else function(func)
 		for i = 1, 200 do
 			local h; h = hookfunction(func, function(...)
@@ -166,9 +166,25 @@ getgenv().europa = {
 	rawinsequal = compareinstances or function(ins1, ins2)
 		if typeof(ins1) ~= typeof(ins2) and typeof(ins1) ~= "Instance" then return false end
 		if ins1 == ins2 then return true end
-		
+
 		return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1, 10) == GetDebugId(ins2, 10)
 	end,
+	
+	-- this isnt too reliable but regardless a non-recursive lua function should never have itself as an upvalue
+	isrecursive = function(luafunc)
+		if typeof(luafunc) ~= "function" or not islclosure(luafunc) then
+			return error(("invalid argument #1 (lua function expected, got %s)"):format(typeof(luafunc)))
+		end
+		local upvals = debug.getupvalues or getupvalues
+
+		for i, v in upvals(luafunc) do
+			if v == luafunc then
+				return true
+			end
+		end
+
+		return false
+	end
 
 	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
 		return game:GetService(classname)
@@ -191,7 +207,7 @@ getgenv().europa = {
 			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 		end
 	end,
-	
+
 	-- dont use this one or the second just open devconsole and put it off to the side lol
 	--[[hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
 		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
@@ -744,7 +760,7 @@ getgenv().europa = {
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function()
 		local plr = game:GetService("Players").LocalPlayer
-		
+
 		local function CanCastToSTDString(value)
 			return select(2, pcall(FindFirstChild, game, value)) ~= "Unable to cast value to std::string"
 		end
