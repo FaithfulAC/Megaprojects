@@ -169,7 +169,7 @@ getgenv().europa = {
 
 		return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1, 10) == GetDebugId(ins2, 10)
 	end,
-	
+
 	-- this isnt too reliable but regardless a non-recursive lua function should never have itself as an upvalue
 	isrecursive = function(luafunc)
 		if typeof(luafunc) ~= "function" or not islclosure(luafunc) then
@@ -184,7 +184,7 @@ getgenv().europa = {
 		end
 
 		return false
-	end
+	end,
 
 	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
 		return game:GetService(classname)
