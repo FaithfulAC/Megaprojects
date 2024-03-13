@@ -496,7 +496,7 @@ getgenv().europa = {
 				target = getrenv()[gtbl]
 				istbl = false
 			elseif type(gtbl) == "table" then
-				for i, v in getrenv() do if v == gtbl then target = v break end end
+				target = getrenv()[table.find(getrenv(), gtbl)]
 				istbl = true
 			else
 				return error("bad argument #1 to 'setvarintable' (table or string expected)")
@@ -507,19 +507,32 @@ getgenv().europa = {
 		unpacktbl[varname] = nil
 
 		if istbl then
-			for i, v in getrenv() do
-				if v == gtbl then
-					getrenv()[i] = {
-						[varname] = newvar, unpack(unpacktbl)
-					}
-					break
-				end
-			end
+			getrenv()[table.find(getrenv(), gtbl)] = {
+				[varname] = newvar, unpack(unpacktbl)
+			}
 		else
 			getrenv()[gtbl] = {
 				[varname] = newvar, unpack(unpacktbl)
 			}
 		end
+	end,
+	
+	hookvarintbl = function(gtbl, varname: string, newvar)
+		if typeof(gtbl) ~= "table" then
+			return error("bad argument #1 to 'hookvarintable' (table expected)")
+		end
+		
+		local rawmt = getrawmetatable(gtbl)
+		
+		local h; h = hookfunction(rawmt.__index, function(...)
+			local self, arg = ...
+			
+			if not checkcaller() and rawequal(self, gtbl) and typeof(arg) == "string" and arg == varname then
+				return newvar
+			end
+			
+			return h(...)
+		end)
 	end,
 
 	disconn = function(conn)
@@ -1254,7 +1267,8 @@ europa["getluafunctions"] = europa.getlfunctions
 europa["isnilinstance"] = europa.isnil
 europa["setmemoryinflation"] = europa.setmeminflation
 europa["setmemorytaginflation"] = europa.setmemtaginflation
-europa["setvariableintable"] = europa.setvarintbl
+europa["setvarintable"], europa["setvariableintable"] = europa.setvarintbl, europa.setvarintbl
+europa["hookvarintable"], europa["hookvariableintable"] = europa.hookvarintbl, europa.hookvarintbl
 europa["disconnect"] = europa.disconn
 europa["spoofconnections"] = europa.spoofconns
 europa["hookfireserver"] = europa.hookfs
