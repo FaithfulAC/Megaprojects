@@ -256,7 +256,7 @@ getgenv().europa = {
 				return true
 			end
 
-			self,arg=nil,nil
+			
 			return h(...)
 		end)
 	end,]]
@@ -544,12 +544,18 @@ getgenv().europa = {
 	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(waithook: boolean)
 		-- unfortunately unable to determine the connection to disconnect so this is for all connections
 		-- do spoofconns(true/false) then disconn(examplesignal)
-		local h;h=hookmetamethod(Instance.new("Part").Changed:Connect(function()end),"__index", function(...)
-			local self, arg = ...
-			if not checkcaller() and type(arg) == "string" and arg:gsub("^%u",string.lower) == "connected" or arg:gsub("^%u",string.lower):sub(1,10) == "connected\0" then
-				return if waithook then pcall(function() wait(9e9) end) else true -- no wait(9e9) :(
+		local conn = game.Changed:Connect(assert)
+
+		local h; h = hookmetamethod(conn, "__index", function(...)
+			local self, prop = ...
+			if
+				not checkcaller() and
+				typeof(self) == "RBXScriptConnection" and
+				typeof(prop) == "string" and
+				string.gsub(string.split(prop, "\0")[1], "^%u", string.lower) == "connected"
+			then
+				return true
 			end
-			self,arg=nil
 			return h(...)
 		end)
 	end,
@@ -624,10 +630,10 @@ getgenv().europa = {
 						function()
 							task.wait(math.random(5,8)/10)
 							for i, v in pairs(res) do
-							if typeof(v) == "Instance" then
-								rawset(res, i, nil)
+								if typeof(v) == "Instance" then
+									rawset(res, i, nil)
+								end
 							end
-						end
 						end
 
 					task.spawn(targetfnc)
@@ -770,6 +776,20 @@ getgenv().europa = {
 	isnil = function(a: Instance)
 		return a.Parent == nil
 	end,
+	
+	isSTDbait = function(tbl)
+		if typeof(tbl) ~= "table" then
+			return false
+		end
+		
+		for i in pairs(tbl) do
+			if (typeof(i) == "table" or typeof(i) == "userdata") and getrawmetatable(i) ~= nil and rawget(getrawmetatable(i), "__tostring") then
+				return rawget(getrawmetatable(i), "__tostring")
+			end
+		end
+		
+		return false
+	end,
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function()
 		local plr = game:GetService("Players").LocalPlayer
@@ -787,7 +807,7 @@ getgenv().europa = {
 				end
 			end
 
-			self,arg = nil,nil
+			
 			return h1(...)
 		end)
 
@@ -800,7 +820,7 @@ getgenv().europa = {
 				end
 			end
 
-			self,arg = nil,nil
+			
 			return h2(...)
 		end)
 	end,
@@ -877,7 +897,7 @@ getgenv().europa = {
 			if not checkcaller() and self == stats and type(arg) == "string" and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\0" or (not stats:FindFirstChild("instanceCount") and (arg == "instanceCount" or arg:sub(1,14) == "instanceCount\0"))) then
 				return org
 			end
-			self,arg=nil,nil
+			
 			return h1(...)
 		end)
 	end,
