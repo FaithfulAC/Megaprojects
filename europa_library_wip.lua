@@ -171,19 +171,8 @@ getgenv().europa = {
 	end,
 
 	-- this isnt too reliable but regardless a non-recursive lua function should never have itself as an upvalue
-	isrecursive = function(luafunc)
-		if typeof(luafunc) ~= "function" or not islclosure(luafunc) then
-			return error(("invalid argument #1 (lua function expected, got %s)"):format(typeof(luafunc)))
-		end
-		local upvals = debug.getupvalues or getupvalues
-
-		for i, v in upvals(luafunc) do
-			if v == luafunc then
-				return true
-			end
-		end
-
-		return false
+	isrecursive = if not getupvalues then nil else function(func)
+		return (typeof(func) == "function" and table.find(getupvalues(func), func) ~= nil) or false
 	end,
 
 	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
