@@ -71,6 +71,10 @@ getgenv().europa = {
 		getgenv().LoadCSOBypass = not DontLoadCStackOverflowBypass
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua"))()
 	end,
+	
+	loadonsignalconnected = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/on-signal-connected.lua"))()
+	end,
 
 	loadgetproperties = function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties.lua"))()
