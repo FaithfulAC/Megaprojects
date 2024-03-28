@@ -182,6 +182,18 @@ getgenv().europa = {
 	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
 		return game:GetService(classname)
 	end,
+	
+	getrealconnections = function()
+		local tbl = {}
+		
+		for i, v in getgc(true) do
+			if typeof(v) == "RBXScriptConnection" then
+				table.insert(tbl, v)
+			end
+		end
+		
+		return tbl
+	end,
 
 	getcs = function()
 		return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
