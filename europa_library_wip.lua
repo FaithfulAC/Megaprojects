@@ -701,10 +701,12 @@ getgenv().europa = {
 
 	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent) -- local a = {grabargs(rem)}
 		local args = nil
+		
 		local h;h=hookfunction(rem.FireServer, function(...)
 			args = {select(2,...)}
 			return h(...)
 		end)
+		
 		local h2;h2=hookmetamethod(game,"__namecall", function(...)
 			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.lower)
@@ -737,8 +739,8 @@ getgenv().europa = {
 	getmetatables = if not getgc then nil else function()
 		local tbl = {}
 		for i, v in getgc(true) do
-			if type(v) == "table" and getmetatable(v) then
-				table.insert(tbl, getmetatable(v))
+			if (typeof(v) == "table" or typeof(v) == "userdata") and getrawmetatable(v) then
+				table.insert(tbl, getrawmetatable(v))
 			end
 		end
 		return tbl
@@ -1280,7 +1282,7 @@ europa["fti"] = europa.firetouchinterest
 europa["clonefunc"] = europa.clonefunction
 europa["rawinstanceequal"] = europa.rawinsequal
 europa["replacehmm"] = europa.replacehookmetamethod
-europa["getservice"] = europa.gs
+europa["getservice"], europa["GetService"] = europa.gs, europa.gs
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
 europa["getrealhidden"], europa["getrhui"] = europa.getrh, europa.getrh
