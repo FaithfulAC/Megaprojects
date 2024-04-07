@@ -1,4 +1,4 @@
--- for rawinsequal (and std::string stuff)
+-- for std::string stuff
 local GetFullName = (clonefunction and clonefunction(game.GetFullName)) or game.GetFullName
 local GetDebugId = (clonefunction and clonefunction(game.GetDebugId)) or game.GetDebugId
 local FindFirstChild = (clonefunction and clonefunction(game.FindFirstChild)) or game.FindFirstChild
@@ -166,14 +166,6 @@ getgenv().europa = {
 			newcclosure(fnc);
 	end,
 
-	-- this function is probably useless
-	rawinsequal = compareinstances or function(ins1, ins2)
-		if typeof(ins1) ~= typeof(ins2) and typeof(ins1) ~= "Instance" then return false end
-		if ins1 == ins2 then return true end
-
-		return GetFullName(ins1) == GetFullName(ins2) and GetDebugId(ins1, 10) == GetDebugId(ins2, 10)
-	end,
-
 	-- this isnt too reliable but regardless a non-recursive lua function should never have itself as an upvalue
 	isrecursive = if not getupvalues then nil else function(func)
 		return (typeof(func) == "function" and table.find(getupvalues(func), func) ~= nil) or false
@@ -212,103 +204,15 @@ getgenv().europa = {
 			return game:GetService("CoreGui").RobloxGui:FindFirstChild("Folder") or Instance.new("Folder", game:GetService("CoreGui").RobloxGui)
 		end
 	end,
-
-	-- dont use this one or the second just open devconsole and put it off to the side lol
-	--[[hookggoap = if not (hookmetamethod and hookfunction) then nil else function()
-		local pgui = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
-		local stuff = Instance.new("ScreenGui",pgui)
-		stuff.Name = "TouchGui"
-		local stuff2 = Instance.new("Frame",stuff)
-		stuff2.Name = "TouchControlFrame"
-		stuff2.Size = UDim2.fromScale(1,1)
-		stuff2.Visible = false
-
-		local gh1;gh1=hookmetamethod(game,"__namecall", function(...)
-			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.lower)
-
-			if not checkcaller() and self == pgui and method == "getGuiObjectsAtPosition" then
-				return {stuff2}
-			end
-
-			self=nil
-			return gh1(...)
-		end)
-		local gh2;gh2=hookfunction(pgui.GetGuiObjectsAtPosition, function(...)
-			local arg = ...
-
-			if not checkcaller() and arg == pgui then
-				return {stuff2}
-			end
-
-			arg=nil
-			return gh1(...)
-		end)
-	end,
-
-	hookggoap2 = if not (hookmetamethod and hookfunction) then nil else function()
-		local guis = game:GetService("GuiService")
-
-		for i, v in next, getconnections(guis.MenuClosed) do -- spoofconns maybe? ;)
-			v:Disable()
-		end
-
-		local h;h=hookmetamethod(game,"__index", function(...)
-			local self, arg = ...
-			local _arg = (type(arg) == "string" and arg:gsub("^%u", string.lower)) or setmetatable({},{__namecall=function()return false end})
-
-			if not checkcaller() and self == guis and _arg == "menuIsOpen" or _arg:sub(1, 11) == "menuIsOpen\0" then
-				return true
-			end
-
-			
-			return h(...)
-		end)
-	end,]]
-
-	hookgcinfo = if not hookfunction then nil else function()
-		local mini = 800
-		local max = 1200
-
-		local num = if gcinfo() < max and gcinfo() > mini then math.random(mini - 18, mini + 24) else gcinfo()
-
-		if gcinfo() > max then max = gcinfo(); mini = max - math.floor(math.random(3, 6)*100) end
-		if gcinfo() < mini then mini = gcinfo(); max = mini + math.floor(math.random(3, 6)*100) end
-
-		task.spawn(function()
-			while game:GetService("RunService").RenderStepped:Wait() do
-				local int = math.random(4, 8)
-				if num < max - math.random(10,30) then num = math.floor(num+int) game.ItemChanged:Wait() num += math.random(1,2) else
-					num = math.floor(math.random(mini - 18, mini + 24))
-
-					game.ItemChanged:Wait()
-					num += 1
-				end
-			end
-		end)
-		local h;h=hookfunction(getrenv().gcinfo, function(...)
-			if not checkcaller() then return num end
-			return h(...)
-		end)
-		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
-			local cnt = ... -- anti void detection
-			if not checkcaller() and type(cnt) == "string" and (cnt == "count" or cnt:sub(1,6) == "count\0") then
-				return num
-			end
-
-			cnt=nil
-			return h2(...)
-		end)
-	end,
-
-	hookgcinfo2 = if not hookfunction then nil else function() -- more realistic and less detectable by itemchanged		
+	
+	hookgcinfo = if not hookfunction then nil else function() -- more realistic and less detectable by itemchanged		
 		local max = gcinfo()+math.random(
-		math.floor(gcinfo()/6),
-		math.floor(gcinfo()/4)
+			math.floor(gcinfo()/6),
+			math.floor(gcinfo()/4)
 		)
 		local mini = gcinfo()-math.random(
-		math.floor(gcinfo()/6),
-		math.floor(gcinfo()/4)
+			math.floor(gcinfo()/6),
+			math.floor(gcinfo()/4)
 		)
 
 		-- this is so the value can be additionally made even more realistic so any detection bypasses can be easily adapted upon	
@@ -362,7 +266,6 @@ getgenv().europa = {
 				return getgenv().SpoofedGcReturn
 			end
 
-			cnt=nil
 			return h2(...)
 		end)
 	end,
@@ -406,29 +309,6 @@ getgenv().europa = {
 		return game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
 	end,
 
-	setmeminflation = function(bool: boolean)
-		local memconn = getgenv().meminflateconn
-
-		if bool == false then
-			if memconn then memconn:Disconnect() getgenv().meminflateconn = nil end
-			return
-		end
-
-		getgenv().meminflateconn = game:GetService("RunService").Stepped:Connect(function()
-			for i = 1, 100 do
-				local part = Instance.new("Part")
-				part.Parent = workspace
-
-				local orient = Vector3.new(math.random(1, 360000)/100, math.random(1, 360000)/100, math.random(1, 360000)/100)
-				part.Size = Vector3.new(2048,2048,2048)
-				part.Orientation = orient
-				part.Position = Vector3.new(9e9,9e9,9e9)
-				part.Anchored = true
-				part:Destroy()
-			end
-		end)
-	end,
-
 	setmemtaginflation = function(bool: boolean, enum: Enum) -- only supports script and gui lol (default is gui)
 		local scrfunc = getgenv().memtagscriptfunc
 		local guifunc = getgenv().memtagguifunc
@@ -453,10 +333,8 @@ getgenv().europa = {
 		else -- gui or default (gui)
 			if guifunc then return end
 			getgenv().memtagguifunc = game:GetService("RunService").Heartbeat:Connect(function()
-				for i = 1, 100 do
-					local frame = Instance.new("Frame", game:GetService("CoreGui").RobloxGui)
-					frame.Size = UDim2.new(20,0,20,0)
-					frame.Position = UDim2.new(50,0,50,0)
+				for i = 1, 10 do
+					local frame = Instance.new("Frame")
 					task.spawn(function()
 						task.wait(1)
 						frame:Destroy()
@@ -482,7 +360,7 @@ getgenv().europa = {
 		task.spawn(function()
 			while getgenv().gcinflationtable do
 				for i = 1, math.random(100,200) do
-					table.insert(getgenv().gcinflationtable or {}, table.create(150, ""))
+					table.insert(getgenv().gcinflationtable or {}, table.create(1500, {}))
 					task.wait()
 				end
 				if math.random() > 0.7 then
@@ -595,76 +473,94 @@ getgenv().europa = {
 		end
 	end,
 
-	antiweaktable = if not getgc then nil else function()
-		for i, v in getgc(true) do
-			if type(v) == "table" and getrawmetatable(v) and type(getrawmetatable(v)) == "table" and type(rawget(getrawmetatable(v), "__mode")) == "string" and rawget(getrawmetatable(v), "__mode"):find("v") then
-				if table.isfrozen(v) or table.isfrozen(getrawmetatable(v)) then continue end
-
-				local var = rawget(getrawmetatable(v),"__mode")
-				setmetatable(v,{
-					__mode = var,
-					__index = function()
-						error("Don't worry about it ;)")
-					end
-				})
-			end
-		end
-	end,
-
-	antiweaktable2 = if not hookfunction then nil else function(checkMetaAmnt: boolean)
+	antiweaktable = if not hookfunction then nil else function()
 		local h; h = hookfunction(getrenv().setmetatable, function(...)
 			local tbl1, tbl2 = ...
 
-			if not checkcaller() and type(tbl1) == "table" and type(tbl2) == "table" and rawlen(tbl1) > 0 and (if checkMetaAmnt then rawlen(tbl2) == 1 else true) then
-				local isMode = false
-				local var = nil
+			if not checkcaller() and typeof(tbl1) == "table" and typeof(tbl2) == "table" then
+				local Mode;
+				if typeof(rawget(tbl2, "__mode")) == "string" then
+					local temp = string.split(rawget(tbl2, "__mode"), "\0")[1]
 
-				for i, v in pairs(tbl2) do -- Member table.foreachi is deprecated :(
-					if i == "__mode" and type(v) == "string" and string.find(v, "v") then var = v; isMode = true end
+					if string.find(temp, "v") and string.find(temp, "k") then
+						Mode = "kv"
+					elseif string.find(temp, "v") then
+						Mode = "v"
+					elseif string.find(temp, "k") then
+						Mode = "k"
+					end
 				end
 
-				if isMode then
+				if Mode then
 					local res = h(...)
 
-					local targetfnc = if not string.find(var, "k") then
-						function()
-							task.wait(math.random(5,8)/10)
-							table.clear(res)
-						end
-						else
-						function()
-							task.wait(math.random(5,8)/10)
+					task.spawn(function()
+						task.wait(math.random(1,30)/60)
+
+						if Mode == "kv" then
 							for i, v in pairs(res) do
-								if typeof(v) == "Instance" then
-									rawset(res, i, nil)
+								if
+									(type(i) == "userdata" or typeof(i) == "table")
+									and
+									(type(v) == "userdata" or typeof(v) == "table")
+								then
+									rawset(res, v, nil)
+									i, v = nil, nil
+								end
+							end
+						elseif Mode == "v" then
+							for i, v in pairs(res) do
+								if type(v) == "userdata" or typeof(v) == "table" then
+									rawset(res, v, nil)
+									i, v = nil, nil
+								end
+							end
+						elseif Mode == "k" then
+							for i, v in pairs(res) do
+								if type(i) == "userdata" or typeof(i) == "table" then
+									rawset(res, v, nil)
+									i, v = nil, nil
 								end
 							end
 						end
+					end)
 
-					task.spawn(targetfnc)
 					return res
 				end
 			end
 
-			tbl1,tbl2=nil,nil
 			return h(...)
 		end)
-		for i, v in getgc(true) do
-			if type(v) == "table" and getrawmetatable(v) and type(getrawmetatable(v)) == "table" and (rawget(getrawmetatable(v), "__mode") == "v" or rawget(getrawmetatable(v), "__mode") == "kv") then
-				if table.isfrozen(v) then continue end
-
-				task.wait()
-				table.clear(v)
-			end
-		end
 	end,
 
 	antitostring = if not getgc then nil else function() -- fixing krnl decompiler detection i hope
 		for i, v in getgc(true) do
 			if type(v) == "table" and type(getrawmetatable(v)) == "table" and not table.isfrozen(v) and not table.isfrozen(getrawmetatable(v)) then
 				if rawget(getrawmetatable(v),"__tostring") then
-					table.clear(getrawmetatable(v))
+					rawset(getrawmetatable(v), "__tostring", nil)
 				end
+			end
+		end
+	end,
+	
+	safetostring = function(...)
+		local args = {...}
+		
+		if #args < select("#", ...) then
+			for i = #args+1, select("#",...) do
+				args[i] = "nil"
+			end
+		end
+		
+		for i, v in args do
+			if typeof(v) == "table" or typeof(v) == "userdata" and getrawmetatable(v) and rawget(getrawmetatable(v), "__tostring") then
+				local mt = getrawmetatable(v)
+				local func = rawget(mt, "__tostring")
+				rawset(mt, "__tostring", nil)
+				args[i] = tostring(v)
+				rawset(mt, "__tostring", func)
+			else
+				args[i] = tostring(v)
 			end
 		end
 	end,
@@ -700,21 +596,26 @@ getgenv().europa = {
 	end,
 
 	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent) -- local a = {grabargs(rem)}
+		rem = cloneref(rem)
 		local args = nil
 		
-		local h;h=hookfunction(rem.FireServer, function(...)
-			args = {select(2,...)}
+		local h; h = hookfunction(rem.FireServer, function(...)
+			local self = ...
+			
+			if typeof(self) == "Instance" and compareinstances(self, rem) then
+				args = {select(2,...)}
+			end
+			
 			return h(...)
 		end)
 		
-		local h2;h2=hookmetamethod(game,"__namecall", function(...)
+		local h2; h2 = hookmetamethod(game,"__namecall", function(...)
 			local self = ...
 			local method = getnamecallmethod():gsub("^%u", string.lower)
 
-			if self == rem and method == "fireServer" then
+			if typeof(self) == "Instance" and compareinstances(self, rem) and method == "fireServer" then
 				args = {select(2,...)}
 			end
-			self=nil
 
 			return h2(...)
 		end)
@@ -826,7 +727,6 @@ getgenv().europa = {
 					return wait(9e9)
 				end
 			end
-
 			
 			return h2(...)
 		end)
@@ -847,85 +747,80 @@ getgenv().europa = {
 		return game:GetService("ScriptContext"):SetTimeout(1)
 	end,
 
-	hookfs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent)
-		local h1;h1=hookmetamethod(game,"__namecall", function(...)
-			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.lower)
-			if not checkcaller() and self == rem and method == "fireServer" then
-				return wait(9e9)
-			end
-			self=nil
-			return h1(...)
-		end)
-		local h2;h2=hookfunction(rem.FireServer, function(...)
-			local self = ...
-			if not checkcaller() and self == rem then
-				return wait(9e9)
-			end
-			self=nil
-			return h2(...)
-		end)
-	end,
-
-	hookis = if not (hookmetamethod and hookfunction) then nil else function(evn: RemoteFunction)
-		local h1;h1=hookmetamethod(game,"__namecall", function(...)
-			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.lower)
-			if not checkcaller() and self == evn and method == "invokeServer" then
-				return wait(9e9)
-			end
-			self=nil
-			return h1(...)
-		end)
-		local h2;h2=hookfunction(evn.InvokeServer, function(...)
-			local self = ...
-			if not checkcaller() and self == evn then
-				return wait(9e9)
-			end
-			self=nil
-			return h2(...)
-		end)
-	end,
-
 	ls = function(url: string)
 		return loadstring(game:HttpGet(url))()
 	end,
 
 	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
-		local stats = game:GetService("Stats")
-		local org = stats.InstanceCount
-		task.spawn(function()
-			while task.wait(.05) do
-				org += math.random(-100, 101)
+		local Stats = cloneref(game:GetService("Stats"))
+		local CoreGui = cloneref(game:GetService("CoreGui"))
+		local inscount_ret = Stats.InstanceCount
+		
+		game.DescendantAdded:Connect(function(ins)
+			if not ins:IsDescendantOf(CoreGui) then
+				ins = nil
+				inscount_ret += 1
 			end
 		end)
-		local h1;h1=hookmetamethod(game,"__index", function(...)
-			local self, arg = ...
-			if not checkcaller() and self == stats and type(arg) == "string" and (arg == "InstanceCount" or arg:sub(1,14) == "InstanceCount\0" or (not stats:FindFirstChild("instanceCount") and (arg == "instanceCount" or arg:sub(1,14) == "instanceCount\0"))) then
-				return org
-			end
-			
-			return h1(...)
-		end)
-	end,
 
-	hookgs = if not (hookmetamethod and hookfunction) then nil else function(name: string, objtoreturn: Instance)
-		local h1;h1=hookmetamethod(game,"__namecall", function(...)
-			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.lower)
-			if not checkcaller() and self == game and method == "getService" then
-				return objtoreturn or wait(9e9)
+		game.DescendantRemoving:Connect(function(ins)
+			if not ins:IsDescendantOf(CoreGui) then
+				ins = nil
+				task.wait(math.random())
+				inscount_ret -= 1
 			end
-			self=nil
-			return h1(...)
 		end)
-		local h2;h2=hookfunction(game.GetService, function(...)
-			local a,b = ...
-			if not checkcaller() and a == game and b == name then
-				return objtoreturn or wait(9e9)
+
+		local OrgClone;
+
+		local markup = function(...)
+			local result = OrgClone(...)
+
+			if not checkcaller() and typeof(result) == "Instance" and result.Parent == nil then
+				inscount_ret += 1
 			end
-			a,b=nil,nil
-			return h2(...)
+
+			return result
+		end
+
+		OrgClone = hookfunction(game.Clone, markup)
+		hookfunction(game.clone, markup)
+
+		local CloneHook; CloneHook = hookmetamethod(game, "__namecall", function(...)
+			local self = ...
+			local method = getnamecallmethod()
+
+			if not checkcaller() and typeof(self) == "Instance" and (method == "Clone" or method == "clone") then
+				return markup(...)
+			end
+
+			return CloneHook(...)
+		end)
+
+		local InsCountHook; InsCountHook = hookfunction(getrenv().Instance.new, function(...)
+			local result = InsCountHook(...)
+
+			if not checkcaller() and typeof(result) == "Instance" and select(2,...) == nil then
+				inscount_ret += 1
+			end
+
+			return result
+		end)
+		
+		local h1; h1 = hookmetamethod(game,"__index", function(...)
+			local self, arg = ...
+
+			if not checkcaller() and compareinstances(self, Stats) and type(arg) == "string" then
+				local res = h1(...)
+
+				if string.split(string.gsub(arg, "^%u", string.lower), "\0")[1] == "instanceCount" and typeof(res) == "number" then
+					return inscount_ret
+				end
+
+				return res
+			end
+
+			return h1(...)
 		end)
 	end,
 
@@ -985,6 +880,7 @@ getgenv().europa = {
 			getgenv().noclipconn = nil
 			return
 		end
+		
 		getgenv().noclipconn = noclipconn or game:GetService("RunService").Stepped:Connect(function()
 			pcall(function()
 				for i, v in pairs(game:GetService("Players").LocalPlayer.Character:GetChildren()) do
@@ -1071,9 +967,6 @@ getgenv().europa = {
 		Bypassed_Dex.Name = RandomCharacters(math.random(5, 20))
 		if gethui then
 			Bypassed_Dex.Parent = gethui();
-		elseif syn and syn.protect_gui then
-			syn.protect_gui(Bypassed_Dex);
-			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
 		else
 			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
 		end
@@ -1144,9 +1037,6 @@ getgenv().europa = {
 		Bypassed_Dex.Name = RandomCharacters(math.random(5, 20))
 		if gethui then
 			Bypassed_Dex.Parent = gethui();
-		elseif syn and syn.protect_gui then
-			syn.protect_gui(Bypassed_Dex);
-			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
 		else
 			Bypassed_Dex.Parent = cloneref(game:GetService("CoreGui"))
 		end
@@ -1280,7 +1170,6 @@ getgenv().europa = {
 
 europa["fti"] = europa.firetouchinterest
 europa["clonefunc"] = europa.clonefunction
-europa["rawinstanceequal"] = europa.rawinsequal
 europa["replacehmm"] = europa.replacehookmetamethod
 europa["getservice"], europa["GetService"] = europa.gs, europa.gs
 europa["getcoresecure"] = europa.getcs
