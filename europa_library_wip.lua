@@ -180,9 +180,22 @@ getgenv().europa = {
 		local scr = rawget(getfenv(level), "script")
 
 		if typeof(scr) ~= "Instance" then
-			return nil, "Script was not an Instance"
+			return scr
 		end
-		return scr
+
+		return nil, "Script was not an Instance"
+	end,
+	
+	getcallingfunction = function(leveldescent)
+		leveldescent = leveldescent or 0
+
+		for i = 25, 1, -1 do
+			if debug.info(i, "f") and i-leveldescent >= 0 then
+				return debug.info(i-leveldescent, "f")
+			end
+		end
+
+		return nil, "Function not found"
 	end,
 	
 	getrealconnections = function()
