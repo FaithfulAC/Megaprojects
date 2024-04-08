@@ -175,6 +175,16 @@ getgenv().europa = {
 		return game:GetService(classname)
 	end,
 	
+	getcallingscript = function(level)
+		level = level and level + 1 or 1
+		local scr = rawget(getfenv(level), "script")
+
+		if typeof(scr) ~= "Instance" then
+			return nil, "Script was not an Instance"
+		end
+		return scr
+	end,
+	
 	getrealconnections = function()
 		local tbl = {}
 		
@@ -1081,7 +1091,7 @@ getgenv().europa = {
 
 	end,
 
-	loadtsdex = function() -- now this here is the real deal, this should be the preset for bypassing in-game anticheats with dex
+	loadtsdex = function() -- preset for bypassing in-game anticheats with an outdated dex
 		--[[
 		this is meant to bypass almost every top-tier in-game anticheat out there
 		if it does not bypass / is detected then it is your responsibility to bypass it yourself
@@ -1095,12 +1105,7 @@ getgenv().europa = {
 
 		getgenv().Dex = game:GetObjects("rbxassetid://14878398926")[1]
 
-		Dex.Parent = (gethui and gethui() ~= game:GetService("CoreGui") and gethui()) or (function()
-			if syn and syn.protect_gui then
-				syn.protect_gui(Dex)
-			end
-			return game:GetService("CoreGui").RobloxGui
-		end)()
+		Dex.Parent = (gethui and gethui()) or game:GetService("CoreGui").RobloxGui
 
 		-- lol silly forking
 		local charset = {}
