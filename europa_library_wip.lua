@@ -170,6 +170,24 @@ getgenv().europa = {
 	isrecursive = if not getupvalues then nil else function(func)
 		return (typeof(func) == "function" and table.find(getupvalues(func), func) ~= nil) or false
 	end,
+	
+	getmaxstacklevel = function()
+		for i = 0, 20000 do
+			if not pcall(getfenv, i+3) then
+				return i
+			end
+		end
+	end,
+
+	ygetmaxstacklevel = function()
+		for i = 0, 20000 do
+			if not pcall(getfenv, i+3) then
+				return i
+			end
+
+			if i % 200 == 0 then task.wait() end
+		end
+	end,
 
 	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
 		return game:GetService(classname)
@@ -1188,6 +1206,7 @@ getgenv().europa = {
 
 europa["fti"] = europa.firetouchinterest
 europa["clonefunc"] = europa.clonefunction
+europa["yieldgetmaxstacklevel"] = europa.ygetmaxstacklevel
 europa["replacehmm"] = europa.replacehookmetamethod
 europa["getservice"], europa["GetService"] = europa.gs, europa.gs
 europa["getcoresecure"] = europa.getcs
