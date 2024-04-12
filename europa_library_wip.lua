@@ -1,15 +1,21 @@
 -- for std::string stuff
-local GetFullName = (clonefunction and clonefunction(game.GetFullName)) or game.GetFullName
-local GetDebugId = (clonefunction and clonefunction(game.GetDebugId)) or game.GetDebugId
-local FindFirstChild = (clonefunction and clonefunction(game.FindFirstChild)) or game.FindFirstChild
+
+local clonefunction = clonefunction or function(...) return ... end
+local cloneref = cloneref or function(...) return ... end
+
+local GetFullName = clonefunction(game.GetFullName)
+local GetDebugId = clonefunction(game.GetDebugId)
+local FindFirstChild = clonefunction(game.FindFirstChild)
+
+repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
 
 getgenv().europa = {
-	Players = (cloneref and cloneref(game:GetService("Players"))) or game:GetService("Players"),
-	LocalPlayer = game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait(),
+	Players = cloneref(game:GetService("Players")),
+	LocalPlayer = cloneref(game:GetService("Players").LocalPlayer),
 	hookfunc = hookfunction,
 
 	getcharacter = function()
-		local LocalPlayer = LocalPlayer or game:GetService("Players").LocalPlayer or game:GetService("Players"):GetPropertyChangedSignal("LocalPlayer"):Wait()
+		local LocalPlayer = LocalPlayer or game:GetService("Players").LocalPlayer
 		return (LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()) 
 	end,
 
