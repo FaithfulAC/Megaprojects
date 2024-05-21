@@ -40,7 +40,9 @@ TotalNamecallHook = hookmetamethod(game, "__namecall", function(...)
     local self, var = ...
     local method = getnamecallmethod()
 
-
+    if not checkcaller() and typeof(self) == "Instance" then
+        
+    end
         
     return TotalNamecallHook(...)
 end)
