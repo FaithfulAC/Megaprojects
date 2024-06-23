@@ -1,6 +1,6 @@
 --[[
     What is the goal of this script? To prevent almost any and almost all (direct) methods of either destroying or kicking the player.
-    This will not include methods that disconnect the client but do not do anything with the client, such as the Error Code 284 crasher.
+    This will not include methods that disconnect the client but do not do anything that directly calls a disconnect function, such as the Error Code 284 crasher.
     Of course, not everything remains undetected, especially with a script like this. If there is a flaw in logic, please do not hesitate to list it.
 
     Made by @__europa
