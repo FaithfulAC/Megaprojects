@@ -1007,6 +1007,54 @@ getgenv().europa = {
 		workspace.Gravity = int
 	end,
 	
+	setinfjump = function(bool: boolean)
+		if bool then
+			getgenv().infjumpconn = game:GetService("UserInputService").JumpRequest:Connect(function()
+				pcall(function()
+					gethumanoid():ChangeState(Enum.HumanoidStateType.Jumping)
+				end)
+			end)
+		else
+			if getgenv().infjumpconn then
+				getgenv().infjumpconn:Disconnect()
+				getgenv().infjumpconn = nil
+			end
+		end
+	end,
+	
+	setinfjump2 = function(bool: boolean)
+		if bool then
+			getgenv().infjump2conn = game:GetService("UserInputService").JumpRequest:Connect(function()
+				pcall(function()
+					local hum = gethumanoid()
+					
+					if hum.FloorMaterial == Enum.Material.Air then
+						hum.RootPart.Velocity += Vector3.new(0, hum.JumpPower, 0)
+					end
+				end)
+			end)
+		else
+			if getgenv().infjump2conn then
+				getgenv().infjump2conn:Disconnect()
+				getgenv().infjump2conn = nil
+			end
+		end
+	end,
+	
+	setcframews = function(int: number)
+		if getgenv().cframews then
+			getgenv().cframews:Disconnect()
+			getgenv().cframews = nil
+		end
+		
+		getgenv().cframews = game:GetService("RunService").Stepped:Connect(function()
+			pcall(function()
+				local vec3delta = gethumanoid().MoveDirection
+				getcharacter():TranslateBy(vec3delta * Vector3.new(int, 0, int))
+			end)
+		end)
+	end,
+	
 	reset = function()
 		local hum = gethumanoid()
 		local oldRig = hum.RigType
@@ -1094,6 +1142,9 @@ europa["setjumppower"] = europa.setjp
 europa["sethipheight"] = europa.sethh
 europa["setmaxslopeangle"] = europa.setmsa
 europa["setgravity"] = europa.setgrav
+europa["setinfinitejump"] = europa.setinfjump
+europa["setinfinitejump2"] = europa.setinfjump2
+europa["setcframewalkspeed"] = europa.setcframews
 europa["setjumppowerenabled"] = europa.setjpenabled
 europa["loadinfiniteyield"] = europa.loadiy
 europa["loadsecuredex"] = europa.loadsdex
