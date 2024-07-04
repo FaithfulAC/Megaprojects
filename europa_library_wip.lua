@@ -241,6 +241,7 @@ getgenv().europa = {
 	checkvar = function(method: string, str: string): boolean
 		method = method:gsub("^%u", string.lower)
 		str = str:gsub("^%u", string.lower)
+		
 		return method == str or (string.find(method, str) and string.sub(method, 1, string.len(str)+1) == str .. "\0")
 	end,
 
@@ -252,100 +253,16 @@ getgenv().europa = {
 		end
 	end,
 
-	hookgcinfo = if not hookfunction then nil else function() -- more realistic and less detectable by itemchanged		
-		local max = gcinfo()+math.random(
-		math.floor(gcinfo()/6),
-		math.floor(gcinfo()/4)
-		)
-		local mini = gcinfo()-math.random(
-		math.floor(gcinfo()/6),
-		math.floor(gcinfo()/4)
-		)
-
-		-- this is so the value can be additionally made even more realistic so any detection bypasses can be easily adapted upon	
-		getgenv().SpoofedGcReturn = gcinfo()
-
-		local function decrease()
-			for i = 1, 4 do
-				getgenv().SpoofedGcReturn = max - math.floor(((max - mini*1.25)*(i/4))+math.random(-20,20))
-				task.wait(math.random(25,45)/1000)
-			end
-		end
-
-		local range1 = game:GetService("Stats").InstanceCount
-		local range2 = range1 + math.random(1000, 3000)
-
-		local clock = os.clock
-
-		task.spawn(function()
-			while '' do
-				if getgenv().SpoofedGcReturn > max + math.random(-50,50) then decrease() end
-				getgenv().SpoofedGcReturn += math.floor(math.random(range1,range2)/10000)
-
-				local cont, passby = false, clock()
-
-				local temp = game.ItemChanged:Once(function()
-					getgenv().SpoofedGcReturn += math.random(2)
-
-					game.ItemChanged:Once(function()
-						getgenv().SpoofedGcReturn += 1
-						cont = true
-					end)
-				end)
-
-				repeat task.wait() until cont or clock() - passby > 0.05
-
-				if clock() - passby > 0.05 then
-					getgenv().SpoofedGcReturn += math.random(2)
-				end
-				temp:Disconnect()
-			end
-		end)
-
-		local h1;h1=hookfunction(getrenv().gcinfo, function(...)
-			return if not checkcaller() then getgenv().SpoofedGcReturn else h1(...)
-		end)
-
-		local h2;h2=hookfunction(getrenv().collectgarbage, function(...)
-			local cnt = ...
-
-			if not checkcaller() and type(cnt) == "string" and string.split(cnt, "\0")[1] == "count" then
-				return getgenv().SpoofedGcReturn
-			end
-
-			return h2(...)
-		end)
+	hookgcinfo = if not hookfunction then nil else function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+			gcinfo = true
+		})
 	end,
 
 	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
-		local stats = game:GetService("Stats")
-		local ret = stats:GetTotalMemoryUsageMb()
-		task.spawn(function()
-			while game:GetService("RunService").RenderStepped:Wait() do
-				ret += (math.random(-2,2)/(if math.random(2) == 2 then 32 else 64)) - math.random(-1,1)/2
-				task.wait(math.random(1,3)/90)
-			end
-		end)
-		local h1;h1=hookmetamethod(game,"__namecall", function(...)
-			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.lower)
-
-			if not checkcaller() and self == stats and method == "getTotalMemoryUsageMb" then
-				return ret
-			end
-
-			self=nil
-			return h1(...)
-		end)
-		local h2;h2=hookfunction(stats.GetTotalMemoryUsageMb, function(...)
-			local self = ...
-			if not checkcaller() and self == stats then
-				return ret
-			end
-
-			self=nil
-			return h2(...)
-		end)
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+			GetTotalMemoryUsageMb = true
+		})
 	end,
 
 	getmem = function()
@@ -453,6 +370,8 @@ getgenv().europa = {
 		end
 
 		local rawmt = getrawmetatable(gtbl)
+		
+		if not rawmt.__index then return "No metamethod for __index" end
 
 		local h; h = hookfunction(rawmt.__index, function(...)
 			local self, arg = ...
@@ -476,7 +395,7 @@ getgenv().europa = {
 		-- do spoofconns(true/false) then disconn(examplesignal)
 		local conn = game.Changed:Connect(assert)
 
-		local h; h = hookmetamethod(conn, "__index", function(...)
+		local h; h = hookmetamethod(conn, "__index", newcclosure(function(...)
 			local self, prop = ...
 			if
 				not checkcaller() and
@@ -487,7 +406,7 @@ getgenv().europa = {
 				return true
 			end
 			return h(...)
-		end)
+		end))
 	end,
 
 	clientran = function(scr: Instance)
@@ -499,12 +418,12 @@ getgenv().europa = {
 	end,
 
 	antihttp = function(grabArgs: boolean)
-		local _i = request or httprequest or http_request
-
 		if not grabArgs then
-			getgenv()[_i] = nil
+			getgenv().request = nil
+			getgenv().httprequest = nil
+			getgenv().http_request = nil
 		else
-			getgenv()[_i] = function(tbl)
+			local newfunc = newcclosure(function(tbl)
 				warn("httprequest was triggered! Here are the arguments:")
 
 				if type(tbl) == "table" then
@@ -516,68 +435,18 @@ getgenv().europa = {
 				end
 
 				warn("End of arguments")
-			end
+			end)
+			
+			getgenv().request = newfunc
+			getgenv().httprequest = newfunc
+			getgenv().http_request = newfunc
 		end
 	end,
 
 	antiweaktable = if not hookfunction then nil else function()
-		local h; h = hookfunction(getrenv().setmetatable, function(...)
-			local tbl1, tbl2 = ...
-
-			if not checkcaller() and typeof(tbl1) == "table" and typeof(tbl2) == "table" then
-				local Mode;
-				if typeof(rawget(tbl2, "__mode")) == "string" then
-					local temp = string.split(rawget(tbl2, "__mode"), "\0")[1]
-
-					if string.find(temp, "v") and string.find(temp, "k") then
-						Mode = "kv"
-					elseif string.find(temp, "v") then
-						Mode = "v"
-					elseif string.find(temp, "k") then
-						Mode = "k"
-					end
-				end
-
-				if Mode then
-					local res = h(...)
-
-					task.spawn(function()
-						task.wait(math.random(1,30)/60)
-
-						if Mode == "kv" then
-							for i, v in pairs(res) do
-								if
-									(type(i) == "userdata" or typeof(i) == "table")
-									and
-									(type(v) == "userdata" or typeof(v) == "table")
-								then
-									rawset(res, v, nil)
-									i, v = nil, nil
-								end
-							end
-						elseif Mode == "v" then
-							for i, v in pairs(res) do
-								if type(v) == "userdata" or typeof(v) == "table" then
-									rawset(res, v, nil)
-									i, v = nil, nil
-								end
-							end
-						elseif Mode == "k" then
-							for i, v in pairs(res) do
-								if type(i) == "userdata" or typeof(i) == "table" then
-									rawset(res, v, nil)
-									i, v = nil, nil
-								end
-							end
-						end
-					end)
-
-					return res
-				end
-			end
-
-			return h(...)
-		end)
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+			Weaktable = true
+		})
 	end,
 
 	antitostring = if not getgc then nil else function() -- fixing krnl decompiler detection i hope
@@ -647,12 +516,14 @@ getgenv().europa = {
 	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent) -- local a = {grabargs(rem)}
 		rem = cloneref(rem)
 		local args = nil
+		local numofnilvals = 0
 
 		local h; h = hookfunction(rem.FireServer, function(...)
 			local self = ...
 
 			if typeof(self) == "Instance" and compareinstances(self, rem) then
 				args = {select(2,...)}
+				numofnilvals = (select("#", ...) - 1) - #args
 			end
 
 			return h(...)
@@ -664,6 +535,7 @@ getgenv().europa = {
 
 			if typeof(self) == "Instance" and compareinstances(self, rem) and method == "fireServer" then
 				args = {select(2,...)}
+				numofnilvals = (select("#", ...) - 1) - #args
 			end
 
 			return h2(...)
@@ -673,7 +545,7 @@ getgenv().europa = {
 		hookfunction(rem.FireServer, h)
 		hookmetamethod(game,"__namecall", h2)
 
-		return unpack(args)
+		return unpack(args, 1, numofnilvals)
 	end,
 
 	gettables = if not getgc then nil else function()
@@ -749,6 +621,7 @@ getgenv().europa = {
 	end,
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function()
+		-- TODO: have load totalantidisconnect.lua
 		local plr = game:GetService("Players").LocalPlayer
 
 		local function CanCastToSTDString(value)
@@ -801,76 +674,9 @@ getgenv().europa = {
 	end,
 
 	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
-		local Stats = cloneref(game:GetService("Stats"))
-		local CoreGui = cloneref(game:GetService("CoreGui"))
-		local inscount_ret = Stats.InstanceCount
-
-		game.DescendantAdded:Connect(function(ins)
-			if not ins:IsDescendantOf(CoreGui) then
-				ins = nil
-				inscount_ret += 1
-			end
-		end)
-
-		game.DescendantRemoving:Connect(function(ins)
-			if not ins:IsDescendantOf(CoreGui) then
-				ins = nil
-				task.wait(math.random())
-				inscount_ret -= 1
-			end
-		end)
-
-		local OrgClone;
-
-		local markup = function(...)
-			local result = OrgClone(...)
-
-			if not checkcaller() and typeof(result) == "Instance" and result.Parent == nil then
-				inscount_ret += 1
-			end
-
-			return result
-		end
-
-		OrgClone = hookfunction(game.Clone, markup)
-		hookfunction(game.clone, markup)
-
-		local CloneHook; CloneHook = hookmetamethod(game, "__namecall", function(...)
-			local self = ...
-			local method = getnamecallmethod()
-
-			if not checkcaller() and typeof(self) == "Instance" and (method == "Clone" or method == "clone") then
-				return markup(...)
-			end
-
-			return CloneHook(...)
-		end)
-
-		local InsCountHook; InsCountHook = hookfunction(getrenv().Instance.new, function(...)
-			local result = InsCountHook(...)
-
-			if not checkcaller() and typeof(result) == "Instance" and select(2,...) == nil then
-				inscount_ret += 1
-			end
-
-			return result
-		end)
-
-		local h1; h1 = hookmetamethod(game,"__index", function(...)
-			local self, arg = ...
-
-			if not checkcaller() and compareinstances(self, Stats) and type(arg) == "string" then
-				local res = h1(...)
-
-				if string.split(string.gsub(arg, "^%u", string.lower), "\0")[1] == "instanceCount" and typeof(res) == "number" then
-					return inscount_ret
-				end
-
-				return res
-			end
-
-			return h1(...)
-		end)
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+			InstanceCount = true
+		})
 	end,
 
 	waithookfunc = if not hookfunction then nil else function(fnc)
