@@ -375,7 +375,7 @@ getgenv().europa = {
 		else
 			getrenv()[gtbl] = setmetatable({
 				[varname] = newvar, unpack(unpacktbl)
-			}, metatable})
+			}, metatable)
 		end
 	end,
 
