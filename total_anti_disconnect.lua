@@ -6,6 +6,8 @@
     Made by @__europa
     
 ]]
+
+-- TODO: add RemovePersistentPlayer
 local YieldThread = getgenv().Yield
 
 local cloneref = cloneref or function(...) return ... end
