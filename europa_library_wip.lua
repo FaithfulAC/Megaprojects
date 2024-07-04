@@ -72,9 +72,8 @@ getgenv().europa = {
 		return true
 	end,
 
-	loadsafehookmetamethod = function(KeepOriginalFunction: boolean, DontLoadCStackOverflowBypass: boolean)
-		getgenv().KeepHMM = KeepOriginalFunction
-		getgenv().LoadCSOBypass = not DontLoadCStackOverflowBypass
+	loadsafehookmetamethod = function(KeepOriginalFunction: boolean)
+		getgenv().KeepHookmetamethod = KeepOriginalFunction
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua"))()
 	end,
 
@@ -174,12 +173,12 @@ getgenv().europa = {
 
 	-- this isnt too reliable but regardless a non-recursive lua function should never have itself as an upvalue
 	isrecursive = if not getupvalues then nil else function(func)
-		return (typeof(func) == "function" and table.find(getupvalues(func), func) ~= nil) or false
+		return (typeof(func) == "function" and islclosure(func) and table.find(getupvalues(func), func) ~= nil) or false
 	end,
 
 	getmaxstacklevel = function()
 		for i = 0, 20000 do
-			if not pcall(getfenv, i+3) then
+			if not debug.info(i+2, "f") then
 				return i
 			end
 		end
@@ -187,7 +186,7 @@ getgenv().europa = {
 
 	ygetmaxstacklevel = function()
 		for i = 0, 20000 do
-			if not pcall(getfenv, i+3) then
+			if not debug.info(i+2, "f") then
 				return i
 			end
 
@@ -208,6 +207,10 @@ getgenv().europa = {
 		end
 
 		return nil, "Script was not an Instance"
+	end,
+	
+	getcallingthread = function()
+		return coroutine.running()
 	end,
 
 	getcallingfunction = function(leveldescent)
@@ -276,11 +279,13 @@ getgenv().europa = {
 	setmemtaginflation = function(bool: boolean, enum: Enum) -- only supports script and gui lol (default is gui)
 		local scrfunc = getgenv().memtagscriptfunc
 		local guifunc = getgenv().memtagguifunc
+		
 		if bool == false then
 			if scrfunc then scrfunc:Disconnect() getgenv().memtagscriptfunc = nil end
 			if guifunc then guifunc:Disconnect() getgenv().memtagguifunc = nil end
 			return
 		end
+		
 		if enum == Enum.DeveloperMemoryTag.Script or tostring(enum):find("s") then
 			if scrfunc then return end
 			getgenv().memtagscriptfunc =  game:GetService("RunService").Heartbeat:Connect(function()
@@ -352,15 +357,25 @@ getgenv().europa = {
 
 		local unpacktbl = {unpack(target)}
 		unpacktbl[varname] = nil
+		
+		local metatable = {
+			__tostring = function(a)
+				return tostring(target)
+			end,
+			__eq = function(a,b)
+				return target == b
+			end,
+			__metatable = getmetatable(target)
+		}
 
 		if istbl then
-			getrenv()[table.find(getrenv(), gtbl)] = {
+			getrenv()[table.find(getrenv(), gtbl)] = setmetatable({
 				[varname] = newvar, unpack(unpacktbl)
-			}
+			}, metatable)
 		else
-			getrenv()[gtbl] = {
+			getrenv()[gtbl] = setmetatable({
 				[varname] = newvar, unpack(unpacktbl)
-			}
+			}, metatable})
 		end
 	end,
 
@@ -449,7 +464,7 @@ getgenv().europa = {
 		})
 	end,
 
-	antitostring = if not getgc then nil else function() -- fixing krnl decompiler detection i hope
+	antitostring = if not getgc then nil else function()
 		for i, v in getgc(true) do
 			if type(v) == "table" and type(getrawmetatable(v)) == "table" and not table.isfrozen(v) and not table.isfrozen(getrawmetatable(v)) then
 				if rawget(getrawmetatable(v),"__tostring") then
@@ -462,13 +477,14 @@ getgenv().europa = {
 	safetostring = function(...)
 		local args = {...}
 
+		-- since varargs will automatically convert last args that are nil to nothing, we can just make them "nil"
 		if #args < select("#", ...) then
 			for i = #args+1, select("#",...) do
 				args[i] = "nil"
 			end
 		end
 
-		for i, v in args do
+		for i, v in pairs(args) do
 			if (typeof(v) == "table" or typeof(v) == "userdata") and getrawmetatable(v) and rawget(getrawmetatable(v), "__tostring") then
 				local mt = getrawmetatable(v)
 				local func = rawget(mt, "__tostring")
@@ -485,31 +501,37 @@ getgenv().europa = {
 
 	getscripts = if not getinstances then nil else getscripts or function()
 		local tbl = {}
+		
 		for i, v in getinstances() do
 			if typeof(v) == "Instance" and v:IsA("LocalScript") or v:IsA("ModuleScript") then
 				table.insert(tbl, v)
 			end
 		end
+		
 		return tbl
 	end,
 
 	getserverscripts = if not getinstances then nil else function()
 		local tbl = {}
+		
 		for i, v in getinstances() do
 			if typeof(v) == "Instance" and  v:IsA("Script") then
 				table.insert(tbl, v)
 			end
 		end
+		
 		return tbl
 	end,
 
 	getrems = if not getinstances then nil else function()
 		local tbl = {}
+		
 		for i, v in getinstances() do
 			if typeof(v) == "Instance" and v:IsA("RemoteEvent") then
 				table.insert(tbl, v)
 			end
 		end
+		
 		return tbl
 	end,
 
@@ -654,14 +676,50 @@ getgenv().europa = {
 		end)
 	end,
 
+	-- waits until x seconds have passed to reinstate hook-based functions
 	removehooks = function(duration: number)
+		if not duration then duration = 1 end
+		
 		task.spawn(function()
 			local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
-			getgenv().hookfunction = function()end
-			getgenv().hookmetamethod = function()end
-			task.wait(duration or 2)
+			
+			getgenv().hookfunction = newcclosure(function()end)
+			getgenv().hookmetamethod = newcclosure(function()end)
+			
+			task.wait(duration)
+			
 			getgenv().hookfunction = hf
 			getgenv().hookmetamethod = hmm
+		end)
+	end,
+	
+	-- waits until both functions are called x times to reinstate hook-based functions
+	removehooks2 = function(maxcallcount: number)
+		task.spawn(function()
+			local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
+			local callcount = 0;
+			
+			getgenv().hookfunction = newcclosure(function(...)
+				callcount = callcount + 1;
+				
+				if callcount >= maxcallcount then
+					getgenv().hookfunction = hf
+					getgenv().hookmetamethod = hmm
+					
+					return hf(...)
+				end
+			end)
+			
+			getgenv().hookmetamethod = newcclosure(function(...)
+				callcount = callcount + 1;
+
+				if callcount >= maxcallcount then
+					getgenv().hookfunction = hf
+					getgenv().hookmetamethod = hmm
+
+					return hmm(...)
+				end
+			end)
 		end)
 	end,
 
@@ -690,9 +748,11 @@ getgenv().europa = {
 		local root, torso do
 			if char then root = char:FindFirstChild("HumanoidRootPart") torso = char:FindFirstChild("Torso") end
 		end
+		
 		for i, v in next, getconnections(char.DescendantAdded) do
 			v:Disable()
 		end
+		
 		local function dothing(obj)
 			for i, v in next, getconnections(obj.ChildAdded) do
 				v:Disable()
@@ -704,27 +764,26 @@ getgenv().europa = {
 				v:Disable()
 			end
 		end
+		
 		if root then dothing(root) end
 		if torso then dothing(torso) end
 	end,
 
 	antihumcheck = function() -- can interfere with looping walkspeed
 		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
-		for i, v in next, getconnections(hum.Changed) do
-			v:Disable()
+		
+		local function dothing(signal)
+			for i, v in next, getconnections(signal) do
+				v:Disable()
+			end
 		end
-		for i, v in next, getconnections(hum:GetPropertyChangedSignal("WalkSpeed")) do
-			v:Disable()
-		end
-		for i, v in next, getconnections(hum:GetPropertyChangedSignal("JumpPower")) do
-			v:Disable()
-		end
-		for i, v in next, getconnections(hum:GetPropertyChangedSignal("HipHeight")) do
-			v:Disable()
-		end
-		for i, v in next, getconnections(hum:GetPropertyChangedSignal("JumpHeight")) do
-			v:Disable()
-		end
+		
+		dothing(hum.Changed)
+		dothing(hum:GetPropertyChangedSignal("WalkSpeed"))
+		dothing(hum:GetPropertyChangedSignal("JumpPower"))
+		dothing(hum:GetPropertyChangedSignal("HipHeight"))
+		dothing(hum:GetPropertyChangedSignal("JumpHeight"))
+		dothing(hum:GetPropertyChangedSignal("MaxSlopeAngle"))
 	end,
 
 	setnoclip = function(bool: boolean)
@@ -732,6 +791,7 @@ getgenv().europa = {
 			if noclipconn then
 				noclipconn:Disconnect()
 			end
+			
 			getgenv().noclipconn = nil
 			return
 		end
@@ -797,11 +857,11 @@ getgenv().europa = {
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua"))()
 	end,
 
-	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v3 with cloneref and little to no detections occur
+	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v4 with cloneref and with miniscule detections
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))(false)
 	end,
 
-	loadtsdex = function() -- preset for bypassing in-game anticheats with an outdated dex
+	loadtsdex = function() -- preset for bypassing in-game anticheats with a blue-themed dex
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))()
 	end,
 
