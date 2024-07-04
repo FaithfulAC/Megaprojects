@@ -744,7 +744,7 @@ getgenv().europa = {
 	end,
 
 	antibodycheck = function()
-		local char = game:GetService("Players").LocalPlayer.Character
+		local char = getcharacter() or game:GetService("Players").LocalPlayer.Character
 		local root, torso do
 			if char then root = char:FindFirstChild("HumanoidRootPart") torso = char:FindFirstChild("Torso") end
 		end
@@ -770,7 +770,7 @@ getgenv().europa = {
 	end,
 
 	antihumcheck = function() -- can interfere with looping walkspeed
-		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		local hum = gethumanoid() or game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 		
 		local function dothing(signal)
 			for i, v in next, getconnections(signal) do
@@ -806,43 +806,218 @@ getgenv().europa = {
 	end,
 
 	setws = function(int: number, loopHum: boolean)
-		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		local hum: Humanoid = gethumanoid()
 		if hum and loopHum then
 			if getgenv().wsloop then
 				getgenv().wsloop:Disconnect()
+				getgenv().wsloop = nil
 			end
+			
 			getgenv().wsloop = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
 				hum.WalkSpeed = int
 			end)
+			
+			local upvalconn;
+			
+			local upvalfunc; upvalfunc = function()
+				if getgenv().wsloop then
+					getgenv().wsloop:Disconnect()
+					getgenv().wsloop = nil
+				end
+
+				repeat task.wait() until (not hum) or hum.Parent == nil;
+				hum = gethumanoid()
+				
+				if upvalconn then
+					upvalconn:Disconnect()
+					upvalconn = nil;
+				end
+				
+				upvalconn = hum.Died:Connect(upvalfunc)
+			end
+			
+			upvalconn = hum.Died:Connect(upvalfunc)
 		end
+		
 		hum.WalkSpeed = int
 	end,
 
 	setjp = function(int: number, loopHum: boolean)
-		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+		local hum = gethumanoid()
 		if hum and loopHum then
 			if getgenv().jploop then
 				getgenv().jploop:Disconnect()
+				getgenv().jploop = nil
 			end
+
 			getgenv().jploop = hum:GetPropertyChangedSignal("JumpPower"):Connect(function()
 				hum.JumpPower = int
 			end)
+
+			local upvalconn;
+
+			local upvalfunc; upvalfunc = function()
+				if getgenv().jploop then
+					getgenv().jploop:Disconnect()
+					getgenv().jploop = nil
+				end
+
+				repeat task.wait() until (not hum) or hum.Parent == nil;
+				hum = gethumanoid()
+
+				if upvalconn then
+					upvalconn:Disconnect()
+					upvalconn = nil;
+				end
+
+				upvalconn = hum.Died:Connect(upvalfunc)
+			end
+
+			upvalconn = hum.Died:Connect(upvalfunc)
 		end
+		
 		hum.JumpPower = int
 	end,
 
-	setjpenabled = function(bool: boolean)
-		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
-		if hum then hum.UseJumpPower = bool end
+	setjpenabled = function(bool: boolean, loopHum: boolean)
+		local hum = gethumanoid()
+		
+		if hum and loopHum then
+			if getgenv().jpenabledloop then
+				getgenv().jpenabledloop:Disconnect()
+				getgenv().jpenabledloop = nil
+			end
+
+			getgenv().jpenabledloop = hum:GetPropertyChangedSignal("UseJumpPower"):Connect(function()
+				hum.UseJumpPower = bool
+			end)
+
+			local upvalconn;
+
+			local upvalfunc; upvalfunc = function()
+				if getgenv().jpenabledloop then
+					getgenv().jpenabledloop:Disconnect()
+					getgenv().jpenabledloop = nil
+				end
+
+				repeat task.wait() until (not hum) or hum.Parent == nil;
+				hum = gethumanoid()
+
+				if upvalconn then
+					upvalconn:Disconnect()
+					upvalconn = nil;
+				end
+
+				upvalconn = hum.Died:Connect(upvalfunc)
+			end
+
+			upvalconn = hum.Died:Connect(upvalfunc)
+		end
+		
+		hum.UseJumpPower = bool
 	end,
 
-	sethh = function(int: number)
-		local hum = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
-		if hum then hum.HipHeight = int end
+	sethh = function(int: number, loopHum: boolean)
+		local hum = gethumanoid()
+		
+		if hum and loopHum then
+			if getgenv().hhloop then
+				getgenv().hhloop:Disconnect()
+				getgenv().hhloop = nil
+			end
+
+			getgenv().hhloop = hum:GetPropertyChangedSignal("HipHeight"):Connect(function()
+				hum.HipHeight = int
+			end)
+
+			local upvalconn;
+
+			local upvalfunc; upvalfunc = function()
+				if getgenv().hhloop then
+					getgenv().hhloop:Disconnect()
+					getgenv().hhloop = nil
+				end
+
+				repeat task.wait() until (not hum) or hum.Parent == nil;
+				hum = gethumanoid()
+
+				if upvalconn then
+					upvalconn:Disconnect()
+					upvalconn = nil;
+				end
+
+				upvalconn = hum.Died:Connect(upvalfunc)
+			end
+
+			upvalconn = hum.Died:Connect(upvalfunc)
+		end
+		
+		hum.HipHeight = int
+	end,
+	
+	setmsa = function(int: number, loopHum: boolean)
+		local hum = gethumanoid()
+		
+		if hum and loopHum then
+			if getgenv().msaloop then
+				getgenv().msaloop:Disconnect()
+				getgenv().msaloop = nil
+			end
+
+			getgenv().msaloop = hum:GetPropertyChangedSignal("MaxSlopeAngle"):Connect(function()
+				hum.MaxSlopeAngle = int
+			end)
+
+			local upvalconn;
+
+			local upvalfunc; upvalfunc = function()
+				if getgenv().msaloop then
+					getgenv().msaloop:Disconnect()
+					getgenv().msaloop = nil
+				end
+
+				repeat task.wait() until (not hum) or hum.Parent == nil;
+				hum = gethumanoid()
+
+				if upvalconn then
+					upvalconn:Disconnect()
+					upvalconn = nil;
+				end
+
+				upvalconn = hum.Died:Connect(upvalfunc)
+			end
+
+			upvalconn = hum.Died:Connect(upvalfunc)
+		end
+		
+		hum.MaxSlopeAngle = int
 	end,
 
-	setgrav = function(int: number)
+	setgrav = function(int: number, loopGrav: boolean)
+		if loopGrav then
+			if getgenv().gravloop then
+				getgenv().gravloop:Disconnect()
+				getgenv().gravloop = nil
+			end
+			
+			getgenv().gravloop = workspace:GetPropertyChangedSignal("Gravity"):Connect(function()
+				workspace.Gravity = int
+			end)
+		end
 		workspace.Gravity = int
+	end,
+	
+	reset = function()
+		local hum = gethumanoid()
+		local oldRig = hum.RigType
+		
+		if hum.RigType == Enum.HumanoidRigType.R6 then
+			hum.RigType = Enum.HumanoidRigType.R15
+		else
+			hum.RigType = Enum.HumanoidRigType.R6
+		end
+		
+		hum.RigType = oldRig
 	end,
 
 	loadiy = function()
@@ -861,7 +1036,7 @@ getgenv().europa = {
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))(false)
 	end,
 
-	loadtsdex = function() -- preset for bypassing in-game anticheats with a blue-themed dex
+	loadtsdex = function() -- preset for bypassing in-game anticheats with a blue/purple-themed dex
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))()
 	end,
 
@@ -882,10 +1057,14 @@ europa["fti"] = europa.firetouchinterest
 europa["clonefunc"] = europa.clonefunction
 europa["yieldgetmaxstacklevel"] = europa.ygetmaxstacklevel
 europa["replacehmm"] = europa.replacehookmetamethod
-europa["getservice"], europa["GetService"] = europa.gs, europa.gs
+europa["getservice"], europa["GetService"] =
+	europa.gs, europa.gs;
+
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
-europa["getrealhidden"], europa["getrhui"] = europa.getrh, europa.getrh
+europa["getrealhidden"], europa["getrhui"] =
+	europa.getrh, europa.getrh;
+
 europa["getmemory"] = europa.getmem
 europa["getmemorytag"] = europa.getmemtag
 europa["hookmemory"] = europa.hookmem
@@ -894,15 +1073,21 @@ europa["getluafunctions"] = europa.getlfunctions
 europa["isnilinstance"] = europa.isnil
 europa["setmemoryinflation"] = europa.setmeminflation
 europa["setmemorytaginflation"] = europa.setmemtaginflation
-europa["setvarintable"], europa["setvariableintable"] = europa.setvarintbl, europa.setvarintbl
-europa["hookvarintable"], europa["hookvariableintable"] = europa.hookvarintbl, europa.hookvarintbl
+europa["setvarintable"], europa["setvariableintable"] =
+	europa.setvarintbl, europa.setvarintbl;
+
+europa["hookvarintable"], europa["hookvariableintable"] =
+	europa.hookvarintbl, europa.hookvarintbl;
+
 europa["disconnect"] = europa.disconn
 europa["spoofconnections"] = europa.spoofconns
 europa["isclient"] = europa.clientran
 europa["isserver"] = europa.serverran
 europa["quickload"], europa["quickLoad"] = europa.ls, europa.ls
 europa["hookinstancecount"] = europa.hookinscount
-europa["waithookfunction"] = europa.waithookfunc
+europa["waithookfunction"], europa["yieldfunc"], europa["yieldfunction"] =
+	europa.waithookfunc, europa.waithookfunc, europa.waithookfunc;
+
 europa["antihumanoidcheck"] = europa.antihumcheck
 europa["setwalkspeed"] = europa.setws
 europa["setjumppower"] = europa.setjp
