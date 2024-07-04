@@ -6,11 +6,7 @@
     Made by @__europa
     
 ]]
-local SpoofedResult = (getgenv().Yield and function()
-    return task.wait(9e9)
-end) or function()
-    return
-end;
+local YieldThread = getgenv().Yield
 
 local cloneref = cloneref or function(...) return ... end
 local clonefunction = clonefunction or function(...) return ... end
