@@ -1041,6 +1041,29 @@ getgenv().europa = {
 		end
 	end,
 	
+	setinfjump3 = function(bool: boolean)
+		if bool then
+			getgenv().infjump3conn = game:GetService("UserInputService").JumpRequest:Connect(function()
+				pcall(function()
+					local char, hum = getcharacter(), gethumanoid()
+					local root, jh = hum.RootPart, hum.JumpHeight
+					
+					if hum.FloorMaterial == Enum.Material.Air then
+						char:TranslateBy(Vector3.new(0, jh, 0))
+
+						local oldVel = root.Velocity
+						root.Velocity = Vector3.new(oldVel.X, jh, oldVel.Z)
+					end
+				end)
+			end)
+		else
+			if getgenv().infjump3conn then
+				getgenv().infjump3conn:Disconnect()
+				getgenv().infjump3conn = nil
+			end
+		end
+	end,
+	
 	setcframews = function(int: number)
 		if getgenv().cframews then
 			getgenv().cframews:Disconnect()
@@ -1143,7 +1166,12 @@ europa["sethipheight"] = europa.sethh
 europa["setmaxslopeangle"] = europa.setmsa
 europa["setgravity"] = europa.setgrav
 europa["setinfinitejump"] = europa.setinfjump
-europa["setinfinitejump2"] = europa.setinfjump2
+europa["setinfinitejump2"], europa["setvelinfjump"] =
+	europa.setinfjump2, europa.setinfjump2
+
+europa["setinfinitejump3"], europa["setcframeinfjump"] =
+	europa.setinfjump3, europa.setinfjump3
+
 europa["setcframewalkspeed"] = europa.setcframews
 europa["setjumppowerenabled"] = europa.setjpenabled
 europa["loadinfiniteyield"] = europa.loadiy
