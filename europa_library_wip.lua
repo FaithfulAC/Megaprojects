@@ -31,12 +31,30 @@ getgenv().europa = {
 	end,
 
 	HasCoreGuiPerms = function()
-		return pcall(function() GetFullName(game:GetService("CoreGui")) end)
+		return (pcall(function() GetFullName(game:GetService("CoreGui")) end))
+	end,
+	
+	FindFirstDataModelDescendantWithDebugId = function(debugid: string)
+		for i, v in pairs(game:GetDescendants()) do
+			if GetDebugId(v) == debugid then
+				return v
+			end
+		end
+		return nil
 	end,
 
 	FindFirstDataModelDescendantOfClass = function(class: string)
 		for i, v in pairs(game:GetDescendants()) do
 			if v.ClassName == class then
+				return v
+			end
+		end
+		return nil
+	end,
+	
+	FindFirstNilDescendantWithDebugId = function(debugid: string)
+		for i, v in pairs(getnilinstances()) do
+			if GetDebugId(v) == debugid then
 				return v
 			end
 		end
@@ -132,22 +150,67 @@ getgenv().europa = {
 			end
 		end
 	end,
+	
+	fireproximityprompt = fireproximityprompt or function(Obj, Amount, Skip)
+		-- ty reddit (https://www.reddit.com/r/ROBLOXExploiting/comments/tozlok/manipluating_proximity_prompts/)
+		if Obj.ClassName == "ProximityPrompt" then
+			Amount = Amount or 1
+			local PromptTime = Obj.HoldDuration
 
-	replacehookmetamethod = function()
-		getgenv().hookmetamethod = function(...)
-			local object, metamethod, func = ...
-			if type(func) == "function" and islclosure(func) then
-				func = newcclosure(func) -- either get C stack overflow'd or slnaf check'd, i'll go with C stack overflow'd
+			local PropertyChanged;
+			if Skip then
+				Obj.HoldDuration = 0.01
+				PropertyChanged = Obj:GetPropertyChangedSignal("HoldDuration"):Connect(function()
+					Obj.HoldDuration = 0.01
+				end)
 			end
 
-			local meta = (pcall(getrawmetatable, object) and getrawmetatable(object)) or error("Passed value has no valid rawmetatable")
-			local orgmetamethod = meta[metamethod]
+			for i = 1, Amount do
+				Obj:InputHoldBegin()
+				task.wait(Obj.HoldDuration)
+				Obj:InputHoldEnd()
+			end
 
-			setreadonly(meta, false)
-			meta[metamethod] = func
+			if PropertyChanged then
+				PropertyChanged:Disconnect()
+				PropertyChanged = nil
+			end
+			Obj.HoldDuration = PromptTime
+		else
+			error("userdata<ProximityPrompt> expected", 0)
+		end
+	end,
 
-			setreadonly(meta, true)
-			return orgmetamethod
+	replacehookmetamethod = function(useHookFunction: boolean)
+		if useHookFunction and hookfunction then
+			getgenv().hookmetamethod = function(...)
+				local object, metamethod, func = ...
+				if type(func) == "function" and islclosure(func) then
+					func = newcclosure(func)
+				end
+
+				local meta = (pcall(getrawmetatable, object) and getrawmetatable(object)) or error("Passed value has no valid rawmetatable")
+				local orgmetamethod = meta[metamethod]
+
+				hookfunction(orgmetamethod, func)
+				return orgmetamethod
+			end
+		else
+			getgenv().hookmetamethod = function(...)
+				local object, metamethod, func = ...
+				if type(func) == "function" and islclosure(func) then
+					func = newcclosure(func)
+				end
+
+				local meta = (pcall(getrawmetatable, object) and getrawmetatable(object)) or error("Passed value has no valid rawmetatable")
+				local orgmetamethod = meta[metamethod]
+
+				setreadonly(meta, false)
+				meta[metamethod] = func
+
+				setreadonly(meta, true)
+				return orgmetamethod
+			end
 		end
 	end,
 
@@ -208,7 +271,7 @@ getgenv().europa = {
 
 		return nil, "Script was not an Instance"
 	end,
-	
+
 	getcallingthread = function()
 		return coroutine.running()
 	end,
@@ -244,7 +307,7 @@ getgenv().europa = {
 	checkvar = function(method: string, str: string): boolean
 		method = method:gsub("^%u", string.lower)
 		str = str:gsub("^%u", string.lower)
-		
+
 		return method == str or (string.find(method, str) and string.sub(method, 1, string.len(str)+1) == str .. "\0")
 	end,
 
@@ -272,21 +335,21 @@ getgenv().europa = {
 		return game:GetService("Stats"):GetTotalMemoryUsageMb()
 	end,
 
-	getmemtag = function(enum: EnumItem)
+	getmemtag = function(enum)
 		return game:GetService("Stats"):GetMemoryUsageMbForTag(enum)
 	end,
 
 	setmemtaginflation = function(bool: boolean, enum: Enum) -- only supports script and gui lol (default is gui)
 		local scrfunc = getgenv().memtagscriptfunc
 		local guifunc = getgenv().memtagguifunc
-		
+
 		if bool == false then
 			if scrfunc then scrfunc:Disconnect() getgenv().memtagscriptfunc = nil end
 			if guifunc then guifunc:Disconnect() getgenv().memtagguifunc = nil end
 			return
 		end
-		
-		if enum == Enum.DeveloperMemoryTag.Script or tostring(enum):find("s") then
+
+		if enum == Enum.DeveloperMemoryTag.Script or tostring(enum):lower():find("scr") then
 			if scrfunc then return end
 			getgenv().memtagscriptfunc =  game:GetService("RunService").Heartbeat:Connect(function()
 				task.spawn(function(...) -- doing random stuff to increase script activity
@@ -357,7 +420,7 @@ getgenv().europa = {
 
 		local unpacktbl = {unpack(target)}
 		unpacktbl[varname] = nil
-		
+
 		local metatable = {
 			__tostring = function(a)
 				return tostring(target)
@@ -385,7 +448,7 @@ getgenv().europa = {
 		end
 
 		local rawmt = getrawmetatable(gtbl)
-		
+
 		if not rawmt.__index then return "No metamethod for __index" end
 
 		local h; h = hookfunction(rawmt.__index, function(...)
@@ -451,7 +514,7 @@ getgenv().europa = {
 
 				warn("End of arguments")
 			end)
-			
+
 			getgenv().request = newfunc
 			getgenv().httprequest = newfunc
 			getgenv().http_request = newfunc
@@ -495,57 +558,57 @@ getgenv().europa = {
 				args[i] = tostring(v)
 			end
 		end
-		
+
 		return unpack(args)
 	end,
 
 	getscripts = if not getinstances then nil else getscripts or function()
 		local tbl = {}
-		
+
 		for i, v in getinstances() do
 			if typeof(v) == "Instance" and v:IsA("LocalScript") or v:IsA("ModuleScript") then
 				table.insert(tbl, v)
 			end
 		end
-		
+
 		return tbl
 	end,
 
 	getserverscripts = if not getinstances then nil else function()
 		local tbl = {}
-		
+
 		for i, v in getinstances() do
 			if typeof(v) == "Instance" and  v:IsA("Script") then
 				table.insert(tbl, v)
 			end
 		end
-		
+
 		return tbl
 	end,
 
 	getrems = if not getinstances then nil else function()
 		local tbl = {}
-		
+
 		for i, v in getinstances() do
 			if typeof(v) == "Instance" and v:IsA("RemoteEvent") then
 				table.insert(tbl, v)
 			end
 		end
-		
+
 		return tbl
 	end,
 
 	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent) -- local a = {grabargs(rem)}
 		rem = cloneref(rem)
 		local args = nil
-		local numofnilvals = 0
+		local actualnumofvals = 0
 
 		local h; h = hookfunction(rem.FireServer, function(...)
 			local self = ...
 
 			if typeof(self) == "Instance" and compareinstances(self, rem) then
 				args = {select(2,...)}
-				numofnilvals = (select("#", ...) - 1) - #args
+				actualnumofvals = select("#", ...)-1
 			end
 
 			return h(...)
@@ -553,11 +616,11 @@ getgenv().europa = {
 
 		local h2; h2 = hookmetamethod(game,"__namecall", function(...)
 			local self = ...
-			local method = getnamecallmethod():gsub("^%u", string.lower)
+			local method = getnamecallmethod():gsub("^%l", string.upper)
 
 			if typeof(self) == "Instance" and compareinstances(self, rem) and method == "fireServer" then
 				args = {select(2,...)}
-				numofnilvals = (select("#", ...) - 1) - #args
+				actualnumofvals = select("#", ...)-1
 			end
 
 			return h2(...)
@@ -567,7 +630,7 @@ getgenv().europa = {
 		hookfunction(rem.FireServer, h)
 		hookmetamethod(game,"__namecall", h2)
 
-		return unpack(args, 1, numofnilvals)
+		return unpack(args, 1, actualnumofvals)
 	end,
 
 	gettables = if not getgc then nil else function()
@@ -628,7 +691,7 @@ getgenv().europa = {
 		return a.Parent == nil
 	end,
 
-	isSTDbait = function(tbl)
+	isSTDbait = function(tbl) -- wont work if they put the __tostring table within multiple tables ({{{__tostringbait}}})
 		if typeof(tbl) ~= "table" then
 			return false
 		end
@@ -679,37 +742,37 @@ getgenv().europa = {
 	-- waits until x seconds have passed to reinstate hook-based functions
 	removehooks = function(duration: number)
 		if not duration then duration = 1 end
-		
+
 		task.spawn(function()
 			local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
-			
+
 			getgenv().hookfunction = newcclosure(function()end)
 			getgenv().hookmetamethod = newcclosure(function()end)
-			
+
 			task.wait(duration)
-			
+
 			getgenv().hookfunction = hf
 			getgenv().hookmetamethod = hmm
 		end)
 	end,
-	
+
 	-- waits until both functions are called x times to reinstate hook-based functions
 	removehooks2 = function(maxcallcount: number)
 		task.spawn(function()
 			local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
 			local callcount = 0;
-			
+
 			getgenv().hookfunction = newcclosure(function(...)
 				callcount = callcount + 1;
-				
+
 				if callcount >= maxcallcount then
 					getgenv().hookfunction = hf
 					getgenv().hookmetamethod = hmm
-					
+
 					return hf(...)
 				end
 			end)
-			
+
 			getgenv().hookmetamethod = newcclosure(function(...)
 				callcount = callcount + 1;
 
@@ -748,11 +811,11 @@ getgenv().europa = {
 		local root, torso do
 			if char then root = char:FindFirstChild("HumanoidRootPart") torso = char:FindFirstChild("Torso") end
 		end
-		
+
 		for i, v in next, getconnections(char.DescendantAdded) do
 			v:Disable()
 		end
-		
+
 		local function dothing(obj)
 			for i, v in next, getconnections(obj.ChildAdded) do
 				v:Disable()
@@ -764,20 +827,20 @@ getgenv().europa = {
 				v:Disable()
 			end
 		end
-		
+
 		if root then dothing(root) end
 		if torso then dothing(torso) end
 	end,
 
-	antihumcheck = function() -- can interfere with looping walkspeed
+	antihumcheck = function() -- can interfere with looping ws/jp/jh related functions
 		local hum = gethumanoid() or game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
-		
+
 		local function dothing(signal)
 			for i, v in next, getconnections(signal) do
 				v:Disable()
 			end
 		end
-		
+
 		dothing(hum.Changed)
 		dothing(hum:GetPropertyChangedSignal("WalkSpeed"))
 		dothing(hum:GetPropertyChangedSignal("JumpPower"))
@@ -791,7 +854,7 @@ getgenv().europa = {
 			if noclipconn then
 				noclipconn:Disconnect()
 			end
-			
+
 			getgenv().noclipconn = nil
 			return
 		end
@@ -812,13 +875,13 @@ getgenv().europa = {
 				getgenv().wsloop:Disconnect()
 				getgenv().wsloop = nil
 			end
-			
+
 			getgenv().wsloop = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
 				hum.WalkSpeed = int
 			end)
-			
+
 			local upvalconn;
-			
+
 			local upvalfunc; upvalfunc = function()
 				if getgenv().wsloop then
 					getgenv().wsloop:Disconnect()
@@ -827,18 +890,18 @@ getgenv().europa = {
 
 				repeat task.wait() until (not hum) or hum.Parent == nil;
 				hum = gethumanoid()
-				
+
 				if upvalconn then
 					upvalconn:Disconnect()
 					upvalconn = nil;
 				end
-				
+
 				upvalconn = hum.Died:Connect(upvalfunc)
 			end
-			
+
 			upvalconn = hum.Died:Connect(upvalfunc)
 		end
-		
+
 		hum.WalkSpeed = int
 	end,
 
@@ -875,13 +938,13 @@ getgenv().europa = {
 
 			upvalconn = hum.Died:Connect(upvalfunc)
 		end
-		
+
 		hum.JumpPower = int
 	end,
 
 	setjpenabled = function(bool: boolean, loopHum: boolean)
 		local hum = gethumanoid()
-		
+
 		if hum and loopHum then
 			if getgenv().jpenabledloop then
 				getgenv().jpenabledloop:Disconnect()
@@ -913,13 +976,13 @@ getgenv().europa = {
 
 			upvalconn = hum.Died:Connect(upvalfunc)
 		end
-		
+
 		hum.UseJumpPower = bool
 	end,
 
 	sethh = function(int: number, loopHum: boolean)
 		local hum = gethumanoid()
-		
+
 		if hum and loopHum then
 			if getgenv().hhloop then
 				getgenv().hhloop:Disconnect()
@@ -951,13 +1014,13 @@ getgenv().europa = {
 
 			upvalconn = hum.Died:Connect(upvalfunc)
 		end
-		
+
 		hum.HipHeight = int
 	end,
-	
+
 	setmsa = function(int: number, loopHum: boolean)
 		local hum = gethumanoid()
-		
+
 		if hum and loopHum then
 			if getgenv().msaloop then
 				getgenv().msaloop:Disconnect()
@@ -989,24 +1052,25 @@ getgenv().europa = {
 
 			upvalconn = hum.Died:Connect(upvalfunc)
 		end
-		
+
 		hum.MaxSlopeAngle = int
 	end,
 
 	setgrav = function(int: number, loopGrav: boolean)
+		if getgenv().gravloop then
+			getgenv().gravloop:Disconnect()
+			getgenv().gravloop = nil
+		end
+		
 		if loopGrav then
-			if getgenv().gravloop then
-				getgenv().gravloop:Disconnect()
-				getgenv().gravloop = nil
-			end
-			
 			getgenv().gravloop = workspace:GetPropertyChangedSignal("Gravity"):Connect(function()
 				workspace.Gravity = int
 			end)
 		end
+		
 		workspace.Gravity = int
 	end,
-	
+
 	setinfjump = function(bool: boolean)
 		if bool then
 			getgenv().infjumpconn = game:GetService("UserInputService").JumpRequest:Connect(function()
@@ -1021,15 +1085,16 @@ getgenv().europa = {
 			end
 		end
 	end,
-	
+
 	setinfjump2 = function(bool: boolean)
 		if bool then
 			getgenv().infjump2conn = game:GetService("UserInputService").JumpRequest:Connect(function()
 				pcall(function()
 					local hum = gethumanoid()
-					
+
 					if hum.FloorMaterial == Enum.Material.Air then
-						hum.RootPart.Velocity += Vector3.new(0, hum.JumpPower, 0)
+						local oldVel = hum.RootPart.Velocity
+						hum.RootPart.Velocity = Vector3.new(oldVel.X, hum.JumpPower, oldVel.Z)
 					end
 				end)
 			end)
@@ -1040,14 +1105,14 @@ getgenv().europa = {
 			end
 		end
 	end,
-	
+
 	setinfjump3 = function(bool: boolean)
 		if bool then
 			getgenv().infjump3conn = game:GetService("UserInputService").JumpRequest:Connect(function()
 				pcall(function()
 					local char, hum = getcharacter(), gethumanoid()
 					local root, jh = hum.RootPart, hum.JumpHeight
-					
+
 					if hum.FloorMaterial == Enum.Material.Air then
 						char:TranslateBy(Vector3.new(0, jh, 0))
 
@@ -1063,13 +1128,13 @@ getgenv().europa = {
 			end
 		end
 	end,
-	
+
 	setcframews = function(int: number)
 		if getgenv().cframews then
 			getgenv().cframews:Disconnect()
 			getgenv().cframews = nil
 		end
-		
+
 		getgenv().cframews = game:GetService("RunService").Stepped:Connect(function()
 			pcall(function()
 				local vec3delta = gethumanoid().MoveDirection
@@ -1077,17 +1142,17 @@ getgenv().europa = {
 			end)
 		end)
 	end,
-	
+
 	reset = function()
 		local hum = gethumanoid()
 		local oldRig = hum.RigType
-		
+
 		if hum.RigType == Enum.HumanoidRigType.R6 then
 			hum.RigType = Enum.HumanoidRigType.R15
 		else
 			hum.RigType = Enum.HumanoidRigType.R6
 		end
-		
+
 		hum.RigType = oldRig
 	end,
 
@@ -1124,6 +1189,8 @@ getgenv().europa = {
 	end
 }
 
+europa["FindFirstGameDescendantWithDebugId"] = europa.FindFirstDataModelDescendantWithDebugId
+europa["FindFirstGameDescendantOfClass"] = europa.FindFirstDataModelDescendantOfClass
 europa["fti"] = europa.firetouchinterest
 europa["clonefunc"] = europa.clonefunction
 europa["yieldgetmaxstacklevel"] = europa.ygetmaxstacklevel
