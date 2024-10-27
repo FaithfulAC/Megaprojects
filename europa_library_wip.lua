@@ -33,7 +33,7 @@ getgenv().europa = {
 	HasCoreGuiPerms = function()
 		return (pcall(function() GetFullName(game:GetService("CoreGui")) end))
 	end,
-	
+
 	FindFirstDataModelDescendantWithDebugId = function(debugid: string)
 		for i, v in pairs(game:GetDescendants()) do
 			if GetDebugId(v) == debugid then
@@ -51,7 +51,7 @@ getgenv().europa = {
 		end
 		return nil
 	end,
-	
+
 	FindFirstNilDescendantWithDebugId = function(debugid: string)
 		for i, v in pairs(getnilinstances()) do
 			if GetDebugId(v) == debugid then
@@ -150,7 +150,7 @@ getgenv().europa = {
 			end
 		end
 	end,
-	
+
 	fireproximityprompt = fireproximityprompt or function(Obj, Amount, Skip)
 		-- ty reddit (https://www.reddit.com/r/ROBLOXExploiting/comments/tozlok/manipluating_proximity_prompts/)
 		if Obj.ClassName == "ProximityPrompt" then
@@ -302,9 +302,9 @@ getgenv().europa = {
 		conn = nil
 		part:Destroy()
 		part = nil
-						
+
 		return bool
-	end
+	end,
 
 	getrealconnections = function(signal)
 		local tbl = {}
@@ -521,9 +521,9 @@ getgenv().europa = {
 			if
 				not checkcaller() and
 				typeof(self) == "RBXScriptConnection" and
-				(signal ~= nil and table.find(conncache, self) or true)
+				(signal ~= nil and table.find(conncache, self) or true) and
 				typeof(prop) == "string" and
-				string.gsub(string.split(prop, "\0")[1], "^%u", string.lower) == "connected"
+					string.gsub(string.split(prop, "\0")[1], "^%u", string.lower) == "connected"
 			then
 				return true
 			end
@@ -608,7 +608,7 @@ getgenv().europa = {
 
 	safeprint = function(...)
 		return print(safetostring(args))
-	end
+	end,
 
 	getscripts = if not getinstances then nil else getscripts or function()
 		local tbl = {}
@@ -1109,13 +1109,13 @@ getgenv().europa = {
 			getgenv().gravloop:Disconnect()
 			getgenv().gravloop = nil
 		end
-		
+
 		if loopGrav then
 			getgenv().gravloop = workspace:GetPropertyChangedSignal("Gravity"):Connect(function()
 				workspace.Gravity = int
 			end)
 		end
-		
+
 		workspace.Gravity = int
 	end,
 
@@ -1247,7 +1247,7 @@ europa["getservice"], europa["GetService"] =
 	europa.gs, europa.gs;
 
 europa["isrealconnsrequired"] = europa.isrealconnectionsrequired
-europa["getrealconns"] = europa.getrealconnections																						
+europa["getrealconns"] = europa.getrealconnections
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
 europa["getrealhidden"], europa["getrhui"] =
