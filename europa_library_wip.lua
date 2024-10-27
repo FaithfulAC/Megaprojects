@@ -288,13 +288,29 @@ getgenv().europa = {
 		return nil, "Function not found"
 	end,
 
-	getrealconnections = function()
+	getrealconnections = function(signal)
 		local tbl = {}
 
 		for i, v in getgc(true) do
-			if typeof(v) == "RBXScriptConnection" then
+			if typeof(v) == "RBXScriptConnection" and v.Connected then
 				table.insert(tbl, v)
 			end
+		end
+
+		if signal and getconnections then
+			local tbl2 = {}
+			for i, v in next, getconnections(signal) do
+				v:Disable()
+			end
+			for i, v in pairs(tbl) do
+				if not v.Connected then
+					table.insert(tbl2, v)
+				end
+			end
+			for i, v in next, getconnections(signal) do
+				v:Enable()
+			end
+			return tbl2
 		end
 
 		return tbl
