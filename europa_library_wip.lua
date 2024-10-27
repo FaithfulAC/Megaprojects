@@ -502,17 +502,22 @@ getgenv().europa = {
 		end
 	end,
 
-	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(signal, exclusions, waithook: boolean)
+	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(signal, exclusions, inclusions, waithook: boolean)
 		-- if isrealconnectionsrequired returns false then there is no need to load this function for the most part (and it wont even work proper)
 		local conn = game.Changed:Connect(assert)
 		local conncache;
 		if signal then
 			conncache = setmetatable({}, {__mode = "v"})
-			table.insert(conncache, unpack((isrealconnectionsrequired() and getrealconnections or getconnections)(signal)))
-			if exclusions then
+			if exclusions and not inclusions then
 				for i, v in pairs(exclusions) do
 					if table.find(conncache, v) then table.remove(conncache, table.find(conncache, v)) end
 				end
+			elseif inclusions then
+				for i, v in pairs(inclusions) do
+					table.insert(conncache, v)
+				end
+			else
+				table.insert(conncache, unpack((isrealconnectionsrequired() and getrealconnections or getconnections)(signal)))
 			end
 		end
 
@@ -521,7 +526,7 @@ getgenv().europa = {
 			if
 				not checkcaller() and
 				typeof(self) == "RBXScriptConnection" and
-				(signal ~= nil and table.find(conncache, self) or true) and
+				((signal ~= nil and conncache ~= nil and #conncache > 0 and table.find(conncache, self)) or true) and
 				typeof(prop) == "string" and
 					string.gsub(string.split(prop, "\0")[1], "^%u", string.lower) == "connected"
 			then
