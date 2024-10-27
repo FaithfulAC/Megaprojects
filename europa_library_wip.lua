@@ -216,9 +216,9 @@ getgenv().europa = {
 
 	cstackoverflow = if not hookfunction then nil else function(func)
 		for i = 1, 200 do
-			local h; h = hookfunction(func, function(...)
+			local h; h = hookfunction(func, newcclosure(function(...)
 				return h(...)
-			end)
+			end))
 			if i == 200 then
 				return h
 			end
@@ -276,10 +276,11 @@ getgenv().europa = {
 		return coroutine.running()
 	end,
 
-	getcallingfunction = function(leveldescent)
+	getcallingfunction = function(maxdepth, leveldescent)
+		maxdepth = maxdepth or 25
 		leveldescent = leveldescent or 0
 
-		for i = 25, 1, -1 do
+		for i = maxdepth, 1, -1 do
 			if debug.info(i, "f") and i-leveldescent >= 0 then
 				return debug.info(i-leveldescent, "f")
 			end
@@ -501,16 +502,26 @@ getgenv().europa = {
 		end
 	end,
 
-	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(waithook: boolean)
-		-- unfortunately unable to determine the connection to disconnect so this is for all connections
-		-- do spoofconns(true/false) then disconn(examplesignal)
+	spoofconns = if not (hookmetamethod and hookfunction) then nil else function(signal, exclusions, waithook: boolean)
+		-- if isrealconnectionsrequired returns false then there is no need to load this function for the most part (and it wont even work proper)
 		local conn = game.Changed:Connect(assert)
+		local conncache;
+		if signal then
+			conncache = setmetatable({}, {__mode = "v"})
+			table.insert(conncache, unpack((isrealconnectionsrequired() and getrealconnections or getconnections)(signal)))
+			if exclusions then
+				for i, v in pairs(exclusions) do
+					if table.find(conncache, v) then table.remove(conncache, table.find(conncache, v)) end
+				end
+			end
+		end
 
 		local h; h = hookmetamethod(conn, "__index", newcclosure(function(...)
 			local self, prop = ...
 			if
 				not checkcaller() and
 				typeof(self) == "RBXScriptConnection" and
+				(signal ~= nil and table.find(conncache, self) or true)
 				typeof(prop) == "string" and
 				string.gsub(string.split(prop, "\0")[1], "^%u", string.lower) == "connected"
 			then
@@ -521,7 +532,7 @@ getgenv().europa = {
 	end,
 
 	clientran = function(scr: Instance)
-		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and scr.RunContext == Enum.RunContext.Client)
+		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and (scr.RunContext == Enum.RunContext.Client or scr.RunContext == Enum.RunContext.Legacy))
 	end,
 
 	serverran = function(scr: Instance)
@@ -573,7 +584,7 @@ getgenv().europa = {
 	safetostring = function(...)
 		local args = {...}
 
-		-- since varargs will automatically convert last args that are nil to nothing, we can just make them "nil"
+		-- since varargs will automatically convert last args that are nil to nothing, we can just make them "nil" (not using table.pack)
 		if #args < select("#", ...) then
 			for i = #args+1, select("#",...) do
 				args[i] = "nil"
@@ -595,6 +606,10 @@ getgenv().europa = {
 		return unpack(args)
 	end,
 
+	safeprint = function(...)
+		return print(safetostring(args))
+	end
+
 	getscripts = if not getinstances then nil else getscripts or function()
 		local tbl = {}
 
@@ -611,7 +626,7 @@ getgenv().europa = {
 		local tbl = {}
 
 		for i, v in getinstances() do
-			if typeof(v) == "Instance" and  v:IsA("Script") then
+			if typeof(v) == "Instance" and v:IsA("Script") then
 				table.insert(tbl, v)
 			end
 		end
@@ -623,7 +638,7 @@ getgenv().europa = {
 		local tbl = {}
 
 		for i, v in getinstances() do
-			if typeof(v) == "Instance" and v:IsA("RemoteEvent") then
+			if typeof(v) == "Instance" and v:IsA("BaseRemoteEvent") then
 				table.insert(tbl, v)
 			end
 		end
