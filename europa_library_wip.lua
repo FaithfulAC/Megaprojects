@@ -288,6 +288,23 @@ getgenv().europa = {
 		return nil, "Function not found"
 	end,
 
+	isrealconnectionsrequired = function()
+		local part = Instance.new("Part")
+		local conn = part.Changed:Connect(assert)
+
+		for i, v in next, getconnections(part.Changed) do
+			v:Disable()
+		end
+
+		local bool = not conn.Connected			
+		conn:Disconnect()
+		conn = nil
+		part:Destroy()
+		part = nil
+						
+		return bool
+	end
+
 	getrealconnections = function(signal)
 		local tbl = {}
 
@@ -1214,6 +1231,8 @@ europa["replacehmm"] = europa.replacehookmetamethod
 europa["getservice"], europa["GetService"] =
 	europa.gs, europa.gs;
 
+europa["isrealconnsrequired"] = europa.isrealconnectionsrequired
+europa["getrealconns"] = europa.getrealconnections																						
 europa["getcoresecure"] = europa.getcs
 europa["checkvariable"] = europa.checkvar
 europa["getrealhidden"], europa["getrhui"] =
