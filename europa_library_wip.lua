@@ -9,7 +9,7 @@ local FindFirstChild = clonefunction(game.FindFirstChild)
 
 repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
 
-getgenv().europa = {
+local europa = {
 	Players = cloneref(game:GetService("Players")),
 	LocalPlayer = cloneref(game:GetService("Players").LocalPlayer),
 	hookfunc = hookfunction,
@@ -1241,6 +1241,7 @@ getgenv().europa = {
 		game:GetService("TeleportService"):Teleport(game.PlaceId)
 	end
 }
+getgenv().europa = europa
 
 europa["FindFirstGameDescendantWithDebugId"] = europa.FindFirstDataModelDescendantWithDebugId
 europa["FindFirstGameDescendantOfClass"] = europa.FindFirstDataModelDescendantOfClass
