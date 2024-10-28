@@ -365,6 +365,12 @@ local europa = {
 		})
 	end,
 
+	hookpreloadasync = if not (hookmetamethod and hookfunction) then nil else function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+			PreloadAsync = true
+		})
+	end,
+
 	getmem = function()
 		return game:GetService("Stats"):GetTotalMemoryUsageMb()
 	end,
@@ -1262,6 +1268,7 @@ europa["getrealhidden"], europa["getrhui"] =
 europa["getmemory"] = europa.getmem
 europa["getmemorytag"] = europa.getmemtag
 europa["hookmemory"] = europa.hookmem
+europa["hookPreloadAsync"] = europa.hookpreloadasync
 europa["getremotes"] = europa.getrems
 europa["getluafunctions"] = europa.getlfunctions
 europa["isnilinstance"] = europa.isnil
