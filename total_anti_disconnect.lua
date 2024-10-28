@@ -7,8 +7,9 @@
     stupid indentation errors man
 ]]
 
--- TODO: add RemovePersistentPlayer (?)
 local YieldThread = getgenv().Yield
+
+if YieldThread == nil then YieldThread = (...) end
 
 local cloneref = cloneref or function(...) return ... end
 local clonefunction = clonefunction or function(...) return ... end
