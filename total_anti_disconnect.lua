@@ -30,6 +30,7 @@ local LocalPlayer = cloneref(Players.LocalPlayer)
 local GetDebugId, FindFirstChild = clonefunction(game.GetDebugId), clonefunction(game.FindFirstChild)
 
 local compareinstances = compareinstances or function(ins1, ins2)
+	-- because SOME hooks are extremely stupid and calling GetDebugId inside one causes an error
 	local old = select(2, pcall(getidentity))
 	pcall(setthreadidentity, 8)
 	local bool = typeof(ins1) == "Instance" and typeof(ins2) == "Instance" and GetDebugId(ins1) == GetDebugId(ins2)
@@ -47,7 +48,7 @@ local RemoveHook; -- Remove and remove
 local AddItemHook; -- AddItem and addItem
 local KickHook; -- Kick only
 
-ScriptContext:SetTimeout(3) -- Prevent while true-related crashes, just a little extra addition
+-- ScriptContext:SetTimeout(3) -- Prevent while true-related crashes, just a little extra addition
 
 TotalNamecallHook = hookmetamethod(game, "__namecall", function(...)
 	local self, var, var2 = ...
@@ -94,7 +95,7 @@ local AddItemDeter = function(...)
 	local self, var, var2 = ...
 
 	if not checkcaller() and typeof(self) == "Instance" and compareinstances(self, Debris) then
-		if compareinstances(var, LocalPlayer) and (typeof(var2) == "number" and var2 == var2 and var2 ~= 1/0) then
+		if typeof(var) == "Instance" and compareinstances(var, LocalPlayer) and (typeof(var2) == "number" and var2 == var2 and var2 ~= 1/0) then
 			return;
 		end
 	end
