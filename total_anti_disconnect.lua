@@ -17,7 +17,7 @@ local function GetService(class)
 	return cloneref(game:FindFirstChildWhichIsA(class) or game:GetService(class))
 end
 
-local gsub, upper = string.gsub, stirng.upper;
+local gsub, upper = string.gsub, string.upper;
 
 local function CapitalizeFirstLetter(str)
 	return gsub(str, "^%l", upper);
@@ -28,8 +28,12 @@ local LocalPlayer = cloneref(Players.LocalPlayer)
 
 local GetDebugId, FindFirstChild = clonefunction(game.GetDebugId), clonefunction(game.FindFirstChild)
 
-local compareinstances = function(ins1, ins2)
-	return typeof(ins1) == "Instance" and typeof(ins2) == "Instance" and GetDebugId(ins1) == GetDebugId(ins2)
+local compareinstances = compareinstances or function(ins1, ins2)
+	local old = select(2, pcall(getidentity))
+	pcall(setthreadidentity, 8)
+	local bool = typeof(ins1) == "Instance" and typeof(ins2) == "Instance" and GetDebugId(ins1) == GetDebugId(ins2)
+	pcall(setthreadidentity, old)
+	return bool
 end
 
 local function IsLegitimateKickMessage(var)
