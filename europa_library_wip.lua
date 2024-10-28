@@ -764,38 +764,8 @@ local europa = {
 		return false
 	end,
 
-	antikick = if not (hookmetamethod and hookfunction) then nil else function()
-		-- TODO: have load totalantidisconnect.lua
-		local plr = game:GetService("Players").LocalPlayer
-
-		local function CanCastToSTDString(value)
-			return select(2, pcall(FindFirstChild, game, value)) ~= "Unable to cast value to std::string"
-		end
-
-		local h1;h1=hookmetamethod(game,"__namecall", function(...)
-			local self, arg = ...
-
-			if not checkcaller() and self == plr and (getnamecallmethod() == "Kick" or getnamecallmethod() == "kick") then
-				if CanCastToSTDString(arg) then
-					return wait(9e9)
-				end
-			end
-
-
-			return h1(...)
-		end)
-
-		local h2;h2=hookfunction(plr.Kick, function(...)
-			local self, arg = ...
-
-			if not checkcaller() and self == plr then
-				if CanCastToSTDString(arg) then
-					return wait(9e9)
-				end
-			end
-
-			return h2(...)
-		end)
+	antikick = if not (hookmetamethod and hookfunction) then nil else function(yield: boolean) -- default is false
+		return loadstring("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/total_anti_disconnect.lua")(yield)
 	end,
 
 	-- waits until x seconds have passed to reinstate hook-based functions
