@@ -57,12 +57,15 @@ TotalNamecallHook = hookmetamethod(game, "__namecall", function(...)
 	if not checkcaller() and typeof(self) == "Instance" then
 		if compareinstances(self, LocalPlayer) then
 			if method == "Destroy" or method == "Remove" then
+				if YieldThread then return wait(9e9) end
 				return;
 			elseif method == "Kick" and IsLegitimateKickMessage(var) then
+				if YieldThread then return wait(9e9) end
 				return;
 			end
 		elseif compareinstances(self, Debris) then
 			if method == "AddItem" and compareinstances(var, LocalPlayer) and (typeof(var2) == "number" and var2 == var2 and var2 ~= 1/0) then
+				if YieldThread then return wait(9e9) end
 				return;
 			end
 		end
@@ -75,6 +78,7 @@ local DestroyDeter = function(...)
 	local self = ...
 
 	if not checkcaller() and typeof(self) == "Instance" and compareinstances(self, LocalPlayer) then
+		if YieldThread then return wait(9e9) end
 		return;
 	end
 
@@ -85,6 +89,7 @@ local RemoveDeter = function(...)
 	local self = ...
 
 	if not checkcaller() and typeof(self) == "Instance" and compareinstances(self, LocalPlayer) then
+		if YieldThread then return wait(9e9) end
 		return;
 	end
 
@@ -96,6 +101,7 @@ local AddItemDeter = function(...)
 
 	if not checkcaller() and typeof(self) == "Instance" and compareinstances(self, Debris) then
 		if typeof(var) == "Instance" and compareinstances(var, LocalPlayer) and (typeof(var2) == "number" and var2 == var2 and var2 ~= 1/0) then
+			if YieldThread then return wait(9e9) end
 			return;
 		end
 	end
@@ -107,6 +113,7 @@ local KickDeter = function(...)
 	local self, var = ...
 
 	if not checkcaller() and typeof(self) == "Instance" and compareinstances(self, LocalPlayer) and IsLegitimateKickMessage(var) then
+		if YieldThread then return wait(9e9) end
 		return;
 	end
 
