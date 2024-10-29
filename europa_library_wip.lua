@@ -765,7 +765,7 @@ local europa = {
 	end,
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function(yield: boolean) -- default is false
-		return loadstring("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/total_anti_disconnect.lua")(yield)
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/total_anti_disconnect.lua"))(yield)
 	end,
 
 	-- waits until x seconds have passed to reinstate hook-based functions
