@@ -365,10 +365,23 @@ local europa = {
 		})
 	end,
 
+	hookguimemtag = if not (hookmetamethod and hookfunction) then nil else function() -- only supports Enum.DeveloperMemoryTag.Gui
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+			GetMemoryUsageMbForTag = true
+		})
+	end,
+
 	hookpreloadasync = if not (hookmetamethod and hookfunction) then nil else function()
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
 			PreloadAsync = true
 		})
+	end,
+
+	hooktextbox = if not (hookmetamethod and hookfunction) then nil else function(ins)
+		ins = ins or game:GetService("CoreGui").RobloxGui
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+			PreloadAsync = true
+		}, ins)
 	end,
 
 	getmem = function()
@@ -1197,8 +1210,9 @@ local europa = {
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua"))()
 	end,
 
-	loaddex = function() -- prevents hooks from being used in secure dex so it's basically dex v4 with cloneref and with miniscule detections
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))(false)
+	loaddex = function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+		--loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))(false) -- broken rn
 	end,
 
 	loadtsdex = function() -- preset for bypassing in-game anticheats with a blue/purple-themed dex
@@ -1213,8 +1227,17 @@ local europa = {
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))()
 	end,
 
+	loadtsdbypasses = if not (hookmetamethod and hookfunction) then nil else function(options, ins)
+		options, ins = options, ins or game:GetService("CoreGui").RobloxGui
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/true-secure-dex-bypasses.lua"))(options, ins)
+	end,
+
 	rj = function()
 		game:GetService("TeleportService"):Teleport(game.PlaceId)
+	end,
+
+	loadinternal = function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/internal.lua"))()
 	end
 }
 getgenv().europa = europa
@@ -1279,6 +1302,7 @@ europa["loadsecuredex"] = europa.loadsdex
 europa["loadtruesecuredex"] = europa.loadtsdex
 europa["loadsimplespy"] = europa.loadss
 europa["loadvapev4"] = europa.loadv4
+europa["loadbypasses"], europa["loadtsdexbypasses"], europa["loadtruesecuredexbypasses"] = europa.loadtsdbypasses
 europa["rejoin"] = europa.rj
 
 for i, v in europa do
