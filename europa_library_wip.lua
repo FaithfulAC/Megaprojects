@@ -607,6 +607,7 @@ local europa = {
 
 	safetostring = function(...)
 		local args = {...}
+		local getrawmetatable = getrawmetatable or debug.getmetatable or getmetatable
 
 		-- since varargs will automatically convert last args that are nil to nothing, we can just make them "nil" (not using table.pack)
 		if #args < select("#", ...) then
