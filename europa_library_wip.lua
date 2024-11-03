@@ -258,7 +258,7 @@ local europa = {
 	end,
 
 	gs = function(classname: string) -- gs is very shortened but GetService also exists by itself ;)
-		return game:GetService(classname)
+		return cloneref(game:GetService(classname))
 	end,
 
 	getcallingscript = function(level)
