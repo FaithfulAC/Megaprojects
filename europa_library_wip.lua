@@ -380,7 +380,7 @@ local europa = {
 	hooktextbox = if not (hookmetamethod and hookfunction) then nil else function(ins)
 		ins = ins or game:GetService("CoreGui").RobloxGui
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
-			PreloadAsync = true
+			GetFocusedTextBox = true
 		}, ins)
 	end,
 
@@ -782,6 +782,90 @@ local europa = {
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function(yield: boolean) -- default is false
 		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/total_anti_disconnect.lua"))(yield)
+	end,
+
+	disablenamecallhooks = if not hookmetamethod then nil else function(duration: number)
+		if (not duration) or typeof(duration) ~= "number" then duration = 1 end
+		local h;
+
+		if hookfunction then
+			h = hookfunction(getgenv().hookmetamethod, function(mt, method, func)
+				if method == "__namecall" then return end
+				return h(mt, method, func)
+			end)
+		else
+			h = getgenv().hookmetamethod
+
+			getgenv().hookmetamethod = newcclosure(function(mt, method, func)
+				if method == "__namecall" then return end
+				return h(mt, method, func)
+			end)
+		end
+		task.spawn(function()
+			task.wait(duration)
+
+			if hookfunction then
+				hookfunction(getgenv().hookmetamethod, h)
+			else
+				getgenv().hookmetamethod = h
+			end
+		end)
+	end,
+
+	disableindexhooks = if not hookmetamethod then nil else function(duration: number)
+		if (not duration) or typeof(duration) ~= "number" then duration = 1 end
+		local h;
+
+		if hookfunction then
+			h = hookfunction(getgenv().hookmetamethod, function(mt, method, func)
+				if method == "__index" then return end
+				return h(mt, method, func)
+			end)
+		else
+			h = getgenv().hookmetamethod
+
+			getgenv().hookmetamethod = newcclosure(function(mt, method, func)
+				if method == "__index" then return end
+				return h(mt, method, func)
+			end)
+		end
+		task.spawn(function()
+			task.wait(duration)
+
+			if hookfunction then
+				hookfunction(getgenv().hookmetamethod, h)
+			else
+				getgenv().hookmetamethod = h
+			end
+		end)
+	end,
+
+	disablenewindexhooks = if not hookmetamethod then nil else function(duration: number)
+		if (not duration) or typeof(duration) ~= "number" then duration = 1 end
+		local h;
+
+		if hookfunction then
+			h = hookfunction(getgenv().hookmetamethod, function(mt, method, func)
+				if method == "__newindex" then return end
+				return h(mt, method, func)
+			end)
+		else
+			h = getgenv().hookmetamethod
+
+			getgenv().hookmetamethod = newcclosure(function(mt, method, func)
+				if method == "__newindex" then return end
+				return h(mt, method, func)
+			end)
+		end
+		task.spawn(function()
+			task.wait(duration)
+
+			if hookfunction then
+				hookfunction(getgenv().hookmetamethod, h)
+			else
+				getgenv().hookmetamethod = h
+			end
+		end)
 	end,
 
 	-- waits until x seconds have passed to reinstate hook-based functions
@@ -1280,7 +1364,9 @@ europa["disconnect"] = europa.disconn
 europa["spoofconnections"] = europa.spoofconns
 europa["isclient"] = europa.clientran
 europa["isserver"] = europa.serverran
-europa["quickload"], europa["quickLoad"] = europa.ls, europa.ls
+europa["quickload"], europa["quickLoad"] =
+	europa.ls, europa.ls
+
 europa["hookinstancecount"] = europa.hookinscount
 europa["waithookfunction"], europa["yieldfunc"], europa["yieldfunction"] =
 	europa.waithookfunc, europa.waithookfunc, europa.waithookfunc;
@@ -1305,7 +1391,8 @@ europa["loadsecuredex"] = europa.loadsdex
 europa["loadtruesecuredex"] = europa.loadtsdex
 europa["loadsimplespy"] = europa.loadss
 europa["loadvapev4"] = europa.loadv4
-europa["loadbypasses"], europa["loadtsdexbypasses"], europa["loadtruesecuredexbypasses"] = europa.loadtsdbypasses
+europa["loadbypasses"], europa["loadtsdexbypasses"], europa["loadtruesecuredexbypasses"] =
+	europa.loadtsdbypasses, europa.loadtsdbypasses, europa.loadtsdbypasses
 europa["rejoin"] = europa.rj
 
 for i, v in europa do
