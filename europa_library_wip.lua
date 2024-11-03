@@ -183,7 +183,7 @@ local europa = {
 
 	replacehookmetamethod = function(useHookFunction: boolean)
 		if useHookFunction and hookfunction then
-			getgenv().hookmetamethod = function(...)
+			getgenv().hookmetamethod = newcclosure(function(...)
 				local object, metamethod, func = ...
 				if type(func) == "function" and islclosure(func) then
 					func = newcclosure(func)
@@ -194,9 +194,9 @@ local europa = {
 
 				hookfunction(orgmetamethod, func)
 				return orgmetamethod
-			end
+			end, "hookmetamethod")
 		else
-			getgenv().hookmetamethod = function(...)
+			getgenv().hookmetamethod = newcclosure(function(...)
 				local object, metamethod, func = ...
 				if type(func) == "function" and islclosure(func) then
 					func = newcclosure(func)
@@ -210,7 +210,7 @@ local europa = {
 
 				setreadonly(meta, true)
 				return orgmetamethod
-			end
+			end, "hookmetamethod")
 		end
 	end,
 
@@ -799,7 +799,7 @@ local europa = {
 			getgenv().hookmetamethod = newcclosure(function(mt, method, func)
 				if method == "__namecall" then return end
 				return h(mt, method, func)
-			end)
+			end, "hookmetamethod")
 		end
 		task.spawn(function()
 			task.wait(duration)
@@ -827,7 +827,7 @@ local europa = {
 			getgenv().hookmetamethod = newcclosure(function(mt, method, func)
 				if method == "__index" then return end
 				return h(mt, method, func)
-			end)
+			end, "hookmetamethod")
 		end
 		task.spawn(function()
 			task.wait(duration)
@@ -855,7 +855,7 @@ local europa = {
 			getgenv().hookmetamethod = newcclosure(function(mt, method, func)
 				if method == "__newindex" then return end
 				return h(mt, method, func)
-			end)
+			end, "hookmetamethod")
 		end
 		task.spawn(function()
 			task.wait(duration)
@@ -875,8 +875,8 @@ local europa = {
 		task.spawn(function()
 			local hf, hmm = getgenv().hookfunction, getgenv().hookmetamethod
 
-			getgenv().hookfunction = newcclosure(function()end)
-			getgenv().hookmetamethod = newcclosure(function()end)
+			getgenv().hookfunction = newcclosure(function()end, "hookfunction")
+			getgenv().hookmetamethod = newcclosure(function()end, "hookmetamethod")
 
 			task.wait(duration)
 
@@ -900,7 +900,7 @@ local europa = {
 
 					return hf(...)
 				end
-			end)
+			end, "hookfunction")
 
 			getgenv().hookmetamethod = newcclosure(function(...)
 				callcount = callcount + 1;
@@ -911,7 +911,7 @@ local europa = {
 
 					return hmm(...)
 				end
-			end)
+			end, "hookmetamethod")
 		end)
 	end,
 
