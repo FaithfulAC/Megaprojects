@@ -515,8 +515,10 @@ local europa = {
 		end)
 	end,
 
-	disconn = function(conn)
+	disconn = function(conn, hookFunc)
 		for i, v in next, getconnections(conn) do
+			-- this can be detected if one connects the same function to 2 connections and triggers the other connection. Just saying
+			if hookFunc then hookfunction(v.Function, function() return end) continue end
 			v:Disable()
 		end
 	end,
