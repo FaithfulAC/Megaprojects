@@ -47,11 +47,11 @@ local h; h = hookmetamethod(self, metamethod, function(...)
 				for i, v in getupvalues(fnc) do
 					stuff ..= tostring(i) .. ": " .. safetostring(v) .. "\n"
 				end
-				stuff ..= "---------------------------------------\n"
 			end
 		end
 
 		if stuff == "" then return h(...) end
+		stuff ..= "---------------------------------------\n"
 		toWrite ..= stuff
 		if writeIndividualFiles then
                         writefile("hello/" .. tostring(game.PlaceId) .. "_" .. tostring(math.random(100, 1000000)) .. ".txt", stuff)
