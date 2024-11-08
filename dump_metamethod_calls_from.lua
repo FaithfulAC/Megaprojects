@@ -15,7 +15,7 @@ if not sourceToLookFor then return error("come on provide a damn source you dunc
 if not folderName then folderName = "hello" end
 if not stackLimit then stackLimit = 200 + 1 end
 if not duration then duration = 9e9 end
-if not isfolder(holderName) then makefolder(folderName) end
+if not isfolder(folderName) then makefolder(folderName) end
 
 local expSrc = debug.info(1, "s")
 local toWrite = ""
