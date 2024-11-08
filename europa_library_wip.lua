@@ -103,6 +103,11 @@ local europa = {
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties.lua"))()
 	end,
 
+	loaddumpmetamethodcalls = function(...)
+		-- ... self, metamethod, sourceToLookFor, writeIndividualFiles, folderName, stackLimit, duration
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from.lua"))(...)
+	end,
+
 	firesignal = firesignal or function(conn,...)
 		return (type(conn.Function) == "function" and conn.Function(...)) or error("Passed value is not a RBXScriptConnection")
 	end,
