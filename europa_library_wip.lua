@@ -1336,6 +1336,7 @@ getgenv().europa = europa
 
 europa["FindFirstGameDescendantWithDebugId"] = europa.FindFirstDataModelDescendantWithDebugId
 europa["FindFirstGameDescendantOfClass"] = europa.FindFirstDataModelDescendantOfClass
+europa["load_dump_metamethod_calls"] = europa.loaddumpmetamethodcalls
 europa["fti"] = europa.firetouchinterest
 europa["clonefunc"] = europa.clonefunction
 europa["yieldgetmaxstacklevel"] = europa.ygetmaxstacklevel
