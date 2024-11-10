@@ -248,7 +248,7 @@ local function isInRobloxEnvTable(func)
 	return false
 end
 
-local function Safetostring(obj, convertnumbers)
+local function Safetostring(obj)
 	if typeof(obj) == "nil" or typeof(obj) == "boolean" then
 		return tostring(obj)
 	end
@@ -266,11 +266,11 @@ local function Safetostring(obj, convertnumbers)
 	end
 
 	if typeof(obj) == "thread" then
-		return "--[[threads do not register to server]]\n" .. "coroutine.create(function()end)"
+		return "coroutine.create(function()end) --[[" .. tostring(obj) .. "]]"
 	end
 
 	if typeof(obj) == "number" then
-		return convertnumbers and '"' .. tostring(obj) .. '"' or obj
+		return tostring(obj)
 	end
 
 	if typeof(obj) == "userdata" then
