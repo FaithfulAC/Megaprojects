@@ -108,6 +108,11 @@ local europa = {
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from.lua"))(...)
 	end,
 
+	loaddumpmetamethodcallsheavy = function(...)
+		-- ... self, metamethod, sourceToLookFor, writeIndividualFiles, folderName, stackLimit, duration
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from_heavy.lua"))(...)
+	end,
+
 	firesignal = firesignal or function(conn,...)
 		return (type(conn.Function) == "function" and conn.Function(...)) or error("Passed value is not a RBXScriptConnection")
 	end,
@@ -1339,6 +1344,7 @@ getgenv().europa = europa
 europa["FindFirstGameDescendantWithDebugId"] = europa.FindFirstDataModelDescendantWithDebugId
 europa["FindFirstGameDescendantOfClass"] = europa.FindFirstDataModelDescendantOfClass
 europa["load_dump_metamethod_calls"] = europa.loaddumpmetamethodcalls
+europa["load_dump_metamethod_calls_heavy"] = europa.loaddumpmetamethodcallsheavy
 europa["fti"] = europa.firetouchinterest
 europa["clonefunc"] = europa.clonefunction
 europa["yieldgetmaxstacklevel"] = europa.ygetmaxstacklevel
