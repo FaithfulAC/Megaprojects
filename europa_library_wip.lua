@@ -678,10 +678,12 @@ local europa = {
 		return tbl
 	end,
 
-	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: RemoteEvent) -- local a = {grabargs(rem)}
+	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: BaseRemoteEvent) -- local a = {grabargs(rem)}
 		rem = cloneref(rem)
 		local args = nil
 		local actualnumofvals = 0
+
+		if not rem:IsA("BaseRemoteEvent") then return error("bad argument #1 to 'grabargs' (BaseRemoteEvent expected)", 0) end
 
 		local h; h = hookfunction(rem.FireServer, function(...)
 			local self = ...
