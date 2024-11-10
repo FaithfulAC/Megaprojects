@@ -261,6 +261,8 @@ local function Safetostring(obj)
 		-- TO RESOLVE AND DO OTHER STUFF WITH
 		if iscclosure(obj) and (getrenv()[debug.info(obj, "n")] or isInRobloxEnvTable(obj)) then
 			return isInRobloxEnvTable(obj) and isInRobloxEnvTable(obj) .. debug.info(obj, "n") or debug.info(obj, "n")
+		elseif iscclosure(obj) then
+			return "function()end --[[is a cclosure]]"
 		end
 		return openfunction(obj, recursivefnccount)
 	end
@@ -347,6 +349,7 @@ opentable = function(tbl, tabcount)
 end
 
 openfunction = function(func, tabcount)
+	if not islclosure(func) then return Safetostring(func) end
 	local tabcount = string.rep("\t", tabcount or 1)
 	recursivefnccount += 1;
 	local orgR;
