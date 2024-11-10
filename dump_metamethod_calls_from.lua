@@ -385,6 +385,11 @@ end
 
 ------------------------------------ where the true fun begins ------------------------------------
 
+pcall(function()
+	-- you better expect a shit ton of lag
+	game:GetService("ScriptContext"):SetTimeout(10)
+end)
+
 local self, metamethod, sourceToLookFor, writeIndividualFiles, folderName, stackLimit, duration = ...
 
 if not europa then
