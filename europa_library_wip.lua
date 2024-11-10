@@ -698,7 +698,7 @@ local europa = {
 			local self = ...
 			local method = getnamecallmethod():gsub("^%l", string.upper)
 
-			if typeof(self) == "Instance" and compareinstances(self, rem) and method == "fireServer" then
+			if typeof(self) == "Instance" and compareinstances(self, rem) and method == "FireServer" then
 				args = {select(2,...)}
 				actualnumofvals = select("#", ...)-1
 			end
