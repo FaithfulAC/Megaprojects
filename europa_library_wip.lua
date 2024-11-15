@@ -90,6 +90,14 @@ local europa = {
 		return true
 	end,
 
+	foreach = function(tbl, func)
+		if typeof(tbl) ~= "table" then return end
+
+		for i, v in pairs(tbl) do
+			func(i, v)
+		end
+	end,
+
 	loadsafehookmetamethod = function(KeepOriginalFunction: boolean)
 		getgenv().KeepHookmetamethod = KeepOriginalFunction
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua"))()
