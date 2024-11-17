@@ -1305,6 +1305,10 @@ local europa = {
 		hum.RigType = oldRig
 	end,
 
+	loadinternal = function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/internal.lua"))()
+	end,
+
 	loadiy = function()
 		return loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
 	end,
