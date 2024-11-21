@@ -787,19 +787,27 @@ local europa = {
 	end,
 
 	istostringbait = function(tbl, lim)
+		lim = lim or 300-1
 		if typeof(tbl) ~= "table" then
 			return false
 		end
 
-		for _ in ipairs(tbl) do return false end -- means there are valid incremental-based values in the table; if there was __tostring it wouldn't work
-
-		for i in pairs(tbl) do
-			if (typeof(i) == "table" or typeof(i) == "userdata") and getrawmetatable(i) ~= nil and rawget(getrawmetatable(i), "__tostring") then
-				return rawget(getrawmetatable(i), "__tostring")
+		local function recursivesearch(tbl, int)
+			for i, newtbl in pairs(tbl) do
+				if (typeof(i) == "table" or typeof(i) == "userdata") and getrawmetatable(i) ~= nil and rawget(getrawmetatable(i), "__tostring") then
+					local a = false
+					for _ in ipairs(v) do a = true end
+					if a then continue end
+					return rawget(getrawmetatable(i), "__tostring")
+				end
+				if typeof(newtbl) == "table" and int < lim then
+					return recursivesearch(newtbl, int+1)
+				end
 			end
+			if int >= lim then return false end
 		end
 
-		return false
+		return recursivesearch(tbl, 1)
 	end,
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function(yield: boolean) -- default is false
