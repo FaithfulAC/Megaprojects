@@ -786,10 +786,12 @@ local europa = {
 		return a.Parent == nil
 	end,
 
-	isSTDbait = function(tbl) -- wont work if they put the __tostring table within multiple tables ({{{__tostringbait}}})
+	istostringbait = function(tbl, lim)
 		if typeof(tbl) ~= "table" then
 			return false
 		end
+
+		for _ in ipairs(tbl) do return false end -- means there are valid incremental-based values in the table; if there was __tostring it wouldn't work
 
 		for i in pairs(tbl) do
 			if (typeof(i) == "table" or typeof(i) == "userdata") and getrawmetatable(i) ~= nil and rawget(getrawmetatable(i), "__tostring") then
@@ -1378,6 +1380,7 @@ europa["hookPreloadAsync"] = europa.hookpreloadasync
 europa["getremotes"] = europa.getrems
 europa["getluafunctions"] = europa.getlfunctions
 europa["isnilinstance"] = europa.isnil
+europa["isSTDbait"] = europa.istostringbait
 europa["setmemoryinflation"] = europa.setmeminflation
 europa["setmemorytaginflation"] = europa.setmemtaginflation
 europa["setvarintable"], europa["setvariableintable"] =
