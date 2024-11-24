@@ -967,8 +967,8 @@ local europa = {
 
 	antibodycheck = function()
 		local char = getcharacter() or game:GetService("Players").LocalPlayer.Character
-		local root, torso do
-			if char then root = char:FindFirstChild("HumanoidRootPart") torso = char:FindFirstChild("Torso") end
+		local root, torso, extratorso do
+			if char then root = char:FindFirstChild("HumanoidRootPart") torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso") extratorso = char:FindFirstChild("LowerTorso") or nil end
 		end
 
 		for i, v in next, getconnections(char.DescendantAdded) do
@@ -989,6 +989,7 @@ local europa = {
 
 		if root then dothing(root) end
 		if torso then dothing(torso) end
+		if extratorso then dothing(extratorso) end
 	end,
 
 	antihumcheck = function() -- can interfere with looping ws/jp/jh related functions
