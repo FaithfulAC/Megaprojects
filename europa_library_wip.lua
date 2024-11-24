@@ -98,6 +98,14 @@ local europa = {
 		end
 	end,
 
+	emptyhookmetamethod = if not hookmetamethod then nil else function(mt, method)
+		local h; h = hookmetamethod(mt, method, function(...) return h(...) end)
+	end,
+
+	emptyhookfunction = if not hookfunction then nil else function(func)
+		local h; h = hookfunction(func, function(...) return h(...) end)
+	end,
+
 	loadsafehookmetamethod = function(KeepOriginalFunction: boolean)
 		getgenv().KeepHookmetamethod = KeepOriginalFunction
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua"))()
