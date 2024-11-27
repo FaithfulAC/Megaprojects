@@ -264,6 +264,9 @@ local function Safetostring(obj)
 		elseif iscclosure(obj) then
 			return "function()end --[[is a cclosure]]"
 		end
+		if recursivefnccount > 20 then
+			return "--[[Recursive function depth exceeded max of 20]]"
+		end
 		return openfunction(obj, recursivefnccount)
 	end
 
@@ -289,6 +292,10 @@ local function Safetostring(obj)
 			if v == obj then
 				return i
 			end
+		end
+
+		if recursivetblcount > 20 then
+			return "--[[Table depth exceeded max of 20]]"
 		end
 		return opentable(obj, recursivetblcount)
 	end
