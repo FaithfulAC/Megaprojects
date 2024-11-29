@@ -1,5 +1,5 @@
 -- example usage:
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from.lua"))(game, "__namecall", "ReplicatedFirst.ExampleScript", false[, "hello", 25, 3])
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from_heavy.lua"))(game, "__namecall", "ReplicatedFirst.ExampleScript", false[, "hello", 25, 3])
 
 -- function preparation (for tables/functions and dumping their indexes/values, constants or upvalues)
 
