@@ -31,7 +31,7 @@ local h; h = hookmetamethod(self, metamethod, function(...)
 	end
 
 	if not checkcaller() and debug.info(getcallingfunction(), "s"):find(sourceToLookFor) and getmaxstacklevel() < stackLimit then
-		local stuff = "self: " .. safetostring((...)) .. "\n" .. metamethod .. " method: " .. getnamecallmethod() .. "\n\nCalling Functions:\n"
+		local stuff = "self: " .. safetostring((...)) .. "\n" .. metamethod .. " method: " .. method .. "\n\nCalling Functions:\n"
 
 		for i = 1, getmaxstacklevel() do
 			if not debug.info(i, "f") then stuff = "" break end
