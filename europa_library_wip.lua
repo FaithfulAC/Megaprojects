@@ -1329,7 +1329,7 @@ local europa = {
 	end,
 
 	setscriptsrunonactor = if not run_on_actor then nil else function(bool)
-		if bool then __load = function(a, ...) return run_on_actor(Instance.new("Actor"), a, ...) end else __load = function(a, ...) return loadstring(game:HttpGet(a))(...) end end
+		if bool then __load = function(a, ...) return run_on_actor(Instance.new("Actor"), game:HttpGet(a), ...) end else __load = function(a, ...) return loadstring(game:HttpGet(a))(...) end end
 	end,
 
 	loadinternal = function()
