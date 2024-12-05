@@ -7,6 +7,10 @@ local GetFullName = clonefunction(game.GetFullName)
 local GetDebugId = clonefunction(game.GetDebugId)
 local FindFirstChild = clonefunction(game.FindFirstChild)
 
+local __load = function(a, ...)
+	return loadstring(game:HttpGet(a))(...)
+end
+
 repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
 
 local europa = {
@@ -108,25 +112,25 @@ local europa = {
 
 	loadsafehookmetamethod = function(KeepOriginalFunction: boolean)
 		getgenv().KeepHookmetamethod = KeepOriginalFunction
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua"))()
+		__load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/safehookmetamethod.lua")
 	end,
 
 	loadonsignalconnected = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/on-signal-connected.lua"))()
+		__load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/on-signal-connected.lua")
 	end,
 
 	loadgetproperties = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties.lua"))()
+		__load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties.lua")
 	end,
 
 	loaddumpmetamethodcalls = function(...)
 		-- ... self, metamethod, sourceToLookFor, writeIndividualFiles, folderName, stackLimit, duration
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from.lua"))(...)
+		__load("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from.lua", ...)
 	end,
 
 	loaddumpmetamethodcallsheavy = function(...)
 		-- ... self, metamethod, sourceToLookFor, writeIndividualFiles, folderName, stackLimit, duration
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from_heavy.lua"))(...)
+		__load("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from_heavy.lua", ...)
 	end,
 
 	firesignal = firesignal or function(conn,...)
@@ -380,32 +384,32 @@ local europa = {
 	end,
 
 	hookgcinfo = if not hookfunction then nil else function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
 			gcinfo = true
 		})
 	end,
 
 	hookmem = if not (hookmetamethod and hookfunction) then nil else function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
 			GetTotalMemoryUsageMb = true
 		})
 	end,
 
 	hookguimemtag = if not (hookmetamethod and hookfunction) then nil else function() -- only supports Enum.DeveloperMemoryTag.Gui
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
 			GetMemoryUsageMbForTag = true
 		})
 	end,
 
 	hookpreloadasync = if not (hookmetamethod and hookfunction) then nil else function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
 			PreloadAsync = true
 		})
 	end,
 
 	hooktextbox = if not (hookmetamethod and hookfunction) then nil else function(ins)
 		ins = ins or game:GetService("CoreGui").RobloxGui
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
 			GetFocusedTextBox = true
 		}, ins)
 	end,
@@ -618,7 +622,7 @@ local europa = {
 	end,
 
 	antiweaktable = if not hookfunction then nil else function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
 			Weaktable = true
 		})
 	end,
@@ -819,7 +823,7 @@ local europa = {
 	end,
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function(yield: boolean) -- default is false
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/total_anti_disconnect.lua"))(yield)
+		return __load("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/total_anti_disconnect.lua", yield)
 	end,
 
 	disablenamecallhooks = if not hookmetamethod then nil else function(duration: number)
@@ -962,7 +966,7 @@ local europa = {
 	end,
 
 	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua"))({
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
 			InstanceCount = true
 		})
 	end,
@@ -1324,50 +1328,50 @@ local europa = {
 		hum.RigType = oldRig
 	end,
 
+	setscriptsrunonactor = if not run_on_actor then nil else function(bool)
+		if bool then __load = function(a, ...) return run_on_actor(Instance.new("Actor"), a, ...) end else __load = function(a, ...) return loadstring(game:HttpGet(a))(...) end end
+	end,
+
 	loadinternal = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/internal.lua"))()
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/internal.lua")
 	end,
 
 	loadiy = function()
-		return loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
+		return __load("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
 	end,
 
-	loadcmdx = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source", true))()
+	loadcmdx = function() -- who even uses this anymore
+		return __load("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source")
 	end,
 
 	loadsdex = function() -- warning: superly too many detection vectors possible for this, operate at your own risk
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua"))()
+		return __load("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua")
 	end,
 
 	loaddex = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
-		--loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))(false) -- broken rn
+		return __load("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua")
+		--__load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua", false) -- broken rn
 	end,
 
 	loadtsdex = function() -- preset for bypassing in-game anticheats with a blue/purple-themed dex
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua"))()
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua")
 	end,
 
 	loadss = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
+		return __load("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua")
 	end,
 
 	loadv4 = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))()
+		return __load("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua")
 	end,
 
 	loadtsdbypasses = if not (hookmetamethod and hookfunction) then nil else function(options, ins)
 		options, ins = options, ins or game:GetService("CoreGui").RobloxGui
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/true-secure-dex-bypasses.lua"))(options, ins)
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/true-secure-dex-bypasses.lua", options, ins)
 	end,
 
 	rj = function()
 		game:GetService("TeleportService"):Teleport(game.PlaceId)
-	end,
-
-	loadinternal = function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/internal.lua"))()
 	end
 }
 getgenv().europa = europa
@@ -1432,6 +1436,7 @@ europa["setinfinitejump3"], europa["setcframeinfjump"] =
 
 europa["setcframewalkspeed"] = europa.setcframews
 europa["setjumppowerenabled"] = europa.setjpenabled
+europa["set_scripts_run_on_actor"] = europa.setscriptsrunonactor
 europa["loadinfiniteyield"] = europa.loadiy
 europa["loadsecuredex"] = europa.loadsdex
 europa["loadtruesecuredex"] = europa.loadtsdex
