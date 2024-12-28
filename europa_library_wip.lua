@@ -1349,8 +1349,7 @@ local europa = {
 	end,
 
 	loaddex = function()
-		return __load("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua")
-		--__load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua", false) -- broken rn
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex.lua", false)
 	end,
 
 	loadtsdex = function() -- preset for bypassing in-game anticheats with a blue/purple-themed dex
