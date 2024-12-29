@@ -186,12 +186,11 @@ local function u2s(u)
 		return string.gsub(tostring(u), "Signal ", "") .. " --[[RBXScriptSignal]]"
 	elseif typeof(u) == "PathWaypoint" then
 		return string.format("PathWaypoint.new(%s, %s)", "Vector3.new(" .. tostring(u.Position) .. ")", tostring(u.Action))
-	else
-		if getrenv()[typeof(u)] and getrenv()[typeof(u)].new then
-			return typeof(u) .. ".new(" .. tostring(u) .. ") --[[warning: not reliable]]"
-		end
-		return typeof(u) .. " --[[actual value is a userdata]]"
 	end
+	if getrenv()[typeof(u)] and getrenv()[typeof(u)].new then
+		return typeof(u) .. ".new(" .. tostring(u) .. ") --[[warning: not reliable]]"
+	end
+	return typeof(u) .. " --[[actual value is a userdata]]"
 end
 
 local list = {
@@ -336,6 +335,8 @@ local function Safetostring(obj)
 	if type(obj) == "userdata" then --[[already looped thru other ud's]]
 		return u2s(obj)
 	end
+
+	return "??? (type: " .. type(obj) .. ", typeof: " .. typeof(obj) .. ")"
 end
 
 local debounce = 0
@@ -356,7 +357,7 @@ opentable = function(tbl, tabcount)
                 if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
 		str ..= tabcount
-		str ..= "[" .. Safetostring(i) .. "] = " .. Safetostring(v) .. ",\n"
+		str ..= "[" .. (Safetostring(i) or "???") .. "] = " .. (Safetostring(v) or "nil --[[?]]") .. ",\n"
 	end
 	str ..= string.rep("\t", recursivetblcount - 2) .. "}"
 
@@ -389,7 +390,7 @@ openfunction = function(func, tabcount)
                 debounce += 1
                 if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
-		str ..= tabcount .. "\t" .. tostring(i) .. ": " .. Safetostring(v) .. "\n"
+		str ..= tabcount .. "\t" .. tostring(i) .. ": " .. (Safetostring(v) or "nil") .. "\n"
 	end
 
 	str ..= "\n" .. tabcount .. "Upvalues:\n"
