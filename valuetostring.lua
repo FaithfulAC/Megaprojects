@@ -353,7 +353,7 @@ opentable = function(tbl, tabcount)
 	local str = "{\n"
 	for i, v in pairs(tbl) do
                 debounce += 1
-                if settings.Yield ~= -1 and debounce % Yield == 0 then task.wait() end
+                if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
 		str ..= tabcount
 		str ..= "[" .. Safetostring(i) .. "] = " .. Safetostring(v) .. ",\n"
@@ -387,7 +387,7 @@ openfunction = function(func, tabcount)
 
 	for i, v in pairs(getconstants(func)) do
                 debounce += 1
-                if settings.Yield ~= -1 and debounce % Yield == 0 then task.wait() end
+                if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
 		str ..= tabcount .. "\t" .. tostring(i) .. ": " .. Safetostring(v) .. "\n"
 	end
@@ -396,7 +396,7 @@ openfunction = function(func, tabcount)
 
 	for i, v in pairs(getupvalues(func)) do
                 debounce += 1
-                if settings.Yield ~= -1 and debounce % Yield == 0 then task.wait() end
+                if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
 		str ..= tabcount .. "\t" .. tostring(i) .. ": " .. Safetostring(v) .. "\n"
 	end
