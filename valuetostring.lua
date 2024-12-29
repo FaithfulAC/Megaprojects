@@ -399,7 +399,8 @@ openfunction = function(func, tabcount)
                 debounce += 1
                 if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
-		str ..= tabcount .. "\t" .. tostring(i) .. ": " .. (Safetostring(v) or "nil") .. "\n"
+		if not pcall(function() str ..= tabcount .. "\t" .. tostring(i) .. ": " .. (Safetostring(v) or "nil") .. "\n" end) then
+			print(tabcount, tostring(i), (Safetostring(v) or nil))
 	end
 
 	str ..= string.rep("\t", recursivefnccount - 2) .. "end"
