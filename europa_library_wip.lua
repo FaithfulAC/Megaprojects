@@ -743,8 +743,11 @@ local europa = {
 
 		hookfunction(rem.FireServer, h)
 		hookmetamethod(game,"__namecall", h2)
+		table.insert(args, method)
 
-		if europa and europa.internal then warn(method) end
+		if europa and europa.internal then
+			warn(method)
+		end
 
 		return unpack(args, 1, actualnumofvals)
 	end,
