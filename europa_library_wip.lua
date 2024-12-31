@@ -729,9 +729,9 @@ local europa = {
 
 		local h2; h2 = hookmetamethod(game,"__namecall", function(...)
 			local self = ...
-			local method = getnamecallmethod():gsub("^%l", string.upper)
+			local ncmethod = getnamecallmethod():gsub("^%l", string.upper)
 
-			if typeof(self) == "Instance" and compareinstances(self, rem) and method == "FireServer" then
+			if typeof(self) == "Instance" and compareinstances(self, rem) and ncmethod == "FireServer" then
 				args = {select(2,...)}
 				actualnumofvals = select("#", ...)-1
 				method = "Method For Extraction: hookmetamethod || __namecall"
