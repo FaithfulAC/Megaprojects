@@ -4,6 +4,9 @@ local settings = (...) or {
         maxStringLength = 5000,
         maxBufferStringLength = 10000,
         maxRepresentedBufferStringLength = 50,
+	maxUpvalues = 20,
+	maxConstants = 50,
+	maxTableCount = 100,
         Yield = 100, -- no yield = -1
 }
 
@@ -15,6 +18,8 @@ local CrazyCharacters = {
 	["r"] = "\r",
 	["f"] = "\f"
 }
+
+local debounce = 0
 
 local function ReturnSafeString(str)
 	local safe = ""
@@ -95,6 +100,9 @@ local recursivetblcount, recursivefnccount = 1, 1
 
 -- function ripped from simplespy
 local function u2s(u)
+	debounce += 1
+        if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
+	
 	if typeof(u) == "TweenInfo" then
 		-- TweenInfo
 		return "TweenInfo.new("
@@ -255,6 +263,9 @@ local function isInRobloxEnvTable(func)
 end
 
 local function Safetostring(obj)
+	debounce += 1
+        if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
+	
 	if typeof(obj) == "nil" or typeof(obj) == "boolean" then
 		return tostring(obj)
 	end
@@ -339,8 +350,6 @@ local function Safetostring(obj)
 	return "??? (type: " .. type(obj) .. ", typeof: " .. typeof(obj) .. ")"
 end
 
-local debounce = 0
-
 opentable = function(tbl, tabcount)
 	local tabcount = string.rep("\t", tabcount or 1)
 	recursivetblcount += 1;
@@ -352,12 +361,16 @@ opentable = function(tbl, tabcount)
 	end
 
 	local str = "{\n"
+	local temp = 0
 	for i, v in pairs(tbl) do
                 debounce += 1
+		temp += 1
                 if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
 		str ..= tabcount
 		str ..= "[" .. (Safetostring(i) or "???") .. "] = " .. (Safetostring(v) or "nil --[[?]]") .. ",\n"
+
+		if temp > settings.maxTableCount then str ..= "--[[HIT MAX TBL # LIMIT]]\n" break end
 	end
 	str ..= string.rep("\t", recursivetblcount - 2) .. "}"
 
@@ -391,6 +404,7 @@ openfunction = function(func, tabcount)
                 if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
                 
 		str ..= tabcount .. "\t" .. tostring(i) .. ": " .. (Safetostring(v) or "nil") .. "\n"
+		if i > settings.maxConstants then str ..= "--[[HIT MAX CNS LIMIT]]\n" break end
 	end
 
 	str ..= "\n" .. tabcount .. "Upvalues:\n"
@@ -402,6 +416,8 @@ openfunction = function(func, tabcount)
 		if not pcall(function() str ..= tabcount .. "\t" .. tostring(i) .. ": " .. (Safetostring(v) or "nil") .. "\n" end) then
 			print(tabcount, tostring(i), (Safetostring(v) or nil)) -- for debugging: if any of these are nil i will know and figure out why
 		end
+		
+		if i > settings.maxUpvalues then str ..= "--[[HIT MAX UPVAL LIMIT]]\n" break end
 	end
 
 	str ..= string.rep("\t", recursivefnccount - 2) .. "end"
