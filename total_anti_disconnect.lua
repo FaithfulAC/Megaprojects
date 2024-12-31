@@ -7,6 +7,8 @@
     stupid indentation errors man
 ]]
 
+-- todo: add ResetPropertyToDefault checks (for LocalPlayer, Parent\000\000, no gsub for ^%l)
+
 local YieldThread = getgenv().Yield
 
 if YieldThread == nil then YieldThread = (...) end
