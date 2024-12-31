@@ -123,6 +123,10 @@ local europa = {
 		__load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getproperties.lua")
 	end,
 
+	loadgetpropertiesbyname = function()
+		__load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/lua-getpropertiesbyname.lua")
+	end,
+
 	loaddumpmetamethodcalls = function(...)
 		-- ... self, metamethod, sourceToLookFor, writeIndividualFiles, folderName, stackLimit, duration
 		__load("https://raw.githubusercontent.com/FaithfulAC/Megaprojects/refs/heads/main/dump_metamethod_calls_from.lua", ...)
