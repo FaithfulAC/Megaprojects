@@ -981,6 +981,12 @@ local europa = {
 		end)
 	end,
 
+	conditionwaithookfunc = if not hookfunction then nil else function(fnc, conditionfnc)
+		local h; h = hookfunction(fnc, function(...)
+			return if not checkcaller() and (h ~= coroutine.isyieldable and coroutine.isyieldable()) and conditionfnc(...) then wait(9e9) else h(...)
+		end)
+	end,
+
 	antibodycheck = function()
 		local char = getcharacter() or game:GetService("Players").LocalPlayer.Character
 		local root, torso, extratorso do
@@ -1423,6 +1429,9 @@ europa["quickload"], europa["quickLoad"] =
 europa["hookinstancecount"] = europa.hookinscount
 europa["waithookfunction"], europa["yieldfunc"], europa["yieldfunction"] =
 	europa.waithookfunc, europa.waithookfunc, europa.waithookfunc;
+
+europa["conditionwaithookfunction"], europa["conditionyieldfunc"], europa["conditionyieldfunction"] =
+	europa.conditionwaithookfunc, europa.conditionwaithookfunc, europa.conditionwaithookfunc;
 
 europa["antihumanoidcheck"] = europa.antihumcheck
 europa["setwalkspeed"] = europa.setws
