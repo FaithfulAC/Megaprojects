@@ -267,6 +267,10 @@ end
 local function Safetostring(obj)
 	debounce += 1
         if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
+
+	if debug.info(100, "f") ~= nil then
+		return "--[[DEPTH OF SAFETOSTRING EXCEEDED 100]]"
+	end
 	
 	if typeof(obj) == "nil" or typeof(obj) == "boolean" then
 		return tostring(obj)
