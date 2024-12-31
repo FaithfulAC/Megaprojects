@@ -19,6 +19,8 @@ local CrazyCharacters = {
 	["f"] = "\f"
 }
 
+local StoredUpvals = {}
+
 local debounce = 0
 
 local function ReturnSafeString(str)
@@ -412,10 +414,20 @@ openfunction = function(func, tabcount)
 	for i, v in pairs(getupvalues(func)) do
                 debounce += 1
                 if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
-                
+
+		local wasStored = false
+		for ts, _v in pairs(StoredUpvals) do
+			if rawequal(v, _v) then
+				str ..= tabcount .. "\t" .. tostring(i) .. ": (value is shared with " .. ts .. ")\n"
+				wasStored = true
+			end
+		end
+		if wasStored then continue end
+		
 		if not pcall(function() str ..= tabcount .. "\t" .. tostring(i) .. ": " .. (Safetostring(v) or "nil") .. "\n" end) then
 			print(tabcount, tostring(i), (Safetostring(v) or nil)) -- for debugging: if any of these are nil i will know and figure out why
 		end
+		StoredUpvals[tostring(func) .. " in index " .. tostring(i)] = v
 		
 		if i > settings.maxUpvalues then str ..= "--[[HIT MAX UPVAL LIMIT]]\n" break end
 	end
