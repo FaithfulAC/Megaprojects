@@ -710,6 +710,7 @@ local europa = {
 	grabargs = if not (hookmetamethod and hookfunction) then nil else function(rem: BaseRemoteEvent) -- local a = {grabargs(rem)}
 		rem = cloneref(rem)
 		local args = nil
+		local method = nil
 		local actualnumofvals = 0
 
 		if not rem:IsA("BaseRemoteEvent") then return error("bad argument #1 to 'grabargs' (BaseRemoteEvent expected)", 0) end
@@ -720,6 +721,7 @@ local europa = {
 			if typeof(self) == "Instance" and compareinstances(self, rem) then
 				args = {select(2,...)}
 				actualnumofvals = select("#", ...)-1
+				method = "Method For Extraction: hookfunction || __index"
 			end
 
 			return h(...)
@@ -732,6 +734,7 @@ local europa = {
 			if typeof(self) == "Instance" and compareinstances(self, rem) and method == "FireServer" then
 				args = {select(2,...)}
 				actualnumofvals = select("#", ...)-1
+				method = "Method For Extraction: hookmetamethod || __namecall"
 			end
 
 			return h2(...)
@@ -740,6 +743,8 @@ local europa = {
 
 		hookfunction(rem.FireServer, h)
 		hookmetamethod(game,"__namecall", h2)
+
+		if europa and europa.internal then warn(method) end
 
 		return unpack(args, 1, actualnumofvals)
 	end,
