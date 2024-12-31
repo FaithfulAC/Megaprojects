@@ -420,10 +420,12 @@ openfunction = function(func, tabcount)
                 if settings.Yield ~= -1 and debounce % settings.Yield == 0 then task.wait() end
 
 		local wasStored = false
-		for ts, _v in pairs(StoredUpvals) do
-			if rawequal(v, _v) then
-				str ..= tabcount .. "\t" .. tostring(i) .. ": (value is shared with " .. ts .. ")\n"
-				wasStored = true
+		if typeof(v) == "table" then
+			for ts, _v in pairs(StoredUpvals) do
+				if rawequal(v, _v) then
+					str ..= tabcount .. "\t" .. tostring(i) .. ": (value is shared with " .. ts .. ")\n"
+					wasStored = true
+				end
 			end
 		end
 		if wasStored then continue end
