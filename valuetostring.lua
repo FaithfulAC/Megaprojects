@@ -285,7 +285,7 @@ local function Safetostring(obj)
 		if iscclosure(obj) and (getrenv()[debug.info(obj, "n")] or isInRobloxEnvTable(obj)) then
 			return isInRobloxEnvTable(obj) and isInRobloxEnvTable(obj) .. debug.info(obj, "n") or debug.info(obj, "n")
 		elseif iscclosure(obj) then
-			return "function()end --[[is a cclosure]]"
+			return "function()end --[[is a cclosure: " .. tostring(obj) .. "]]"
 		end
 		if recursivefnccount > settings.maxFunctionDepth then
 			return "--[[Recursive function depth exceeded max of " .. tostring(settings.maxFunctionDepth) .. "]]"
@@ -401,7 +401,7 @@ openfunction = function(func, tabcount)
 		recursivefnccount = #tabcount + 1
 	end
 
-	local str = "function(" .. makeParams(debug.info(func, "a")) .. ")\n" .. tabcount
+	local str = "function(" .. makeParams(debug.info(func, "a")) .. ") [" .. tostring(func) .. "]\n" .. tabcount
 
 	str ..= "Constants:\n"
 
