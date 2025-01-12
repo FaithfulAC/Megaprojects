@@ -1,3 +1,5 @@
+-- ok welp im probably going to discontinue this real quickly unless i either figure out how to do this without env leaking in a debug info hook
+
 local settings = (...) or { -- not much to add here
         Source = "ReplicatedFirst.",
         LookThroughTables = true,
