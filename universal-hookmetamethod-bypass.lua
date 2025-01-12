@@ -1,4 +1,5 @@
 -- ok welp im probably going to discontinue this real quickly unless i figure out how to do this without env leaking in a debug info hook
+-- and have to hook getfenv and setfenv!!!!
 
 local settings = (...) or { -- not much to add here
         Source = "ReplicatedFirst.",
