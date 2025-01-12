@@ -62,6 +62,12 @@ end)
 
 local InfoHook;
 InfoHook = hookfunction(getrenv().debug.info, function(...) -- case people retrieve the metamethod function
+	local int = ...
+
+	if typeof(int) == "number" and not InfoHook(int+1, "f") then
+		return InfoHook(int+1, select(2,...)) -- if debug.info is being called for highest caller (this hook) then return nothing
+	end
+	
         return InfoHook(...)
 end)
 
