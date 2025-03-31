@@ -141,6 +141,22 @@ local europa = {
 		return (type(conn.Function) == "function" and conn.Function(...)) or error("Passed value is not a RBXScriptConnection")
 	end,
 
+	disableandcall = function(tbl, fnc)
+		for i, v in pairs(tbl) do
+			if select(2, pcall(function() return v.Enabled end)) == true then table.remove(tbl, i) end
+
+			for _, conn in next, getconnections(v) do
+				conn:Disable()
+			end
+		end
+		fnc()
+		for i, v in pairs(tbl) do
+			for _, conn in next, getconnections(v) do
+				conn:Enable()
+			end
+		end
+	end,
+				
 	firetouchinterest = firetouchinterest or function(part, opart, numtype)
 		if numtype == 1 then
 			return nil; -- this fti implementation will only operate on 0 because it already does a TouchEnded firing
