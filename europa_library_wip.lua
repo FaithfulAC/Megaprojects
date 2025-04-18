@@ -607,7 +607,9 @@ local europa = {
 		end))
 	end,
 
-	clearweaktables = function()
+	clearweaktables = function(exemptions)
+		if typeof(exemptions) ~= "table" then exemptions = {} end
+
 		local CanBeCollected = function(obj)
 			if (typeof(obj) == "function" and iscclosure(obj) and not isourclosure(obj)) then
 				local FuncName = debug.info(obj, "n")
@@ -620,7 +622,7 @@ local europa = {
 		end
 														
 		for _, tbl in getgc(true) do
-			if typeof(tbl) == "table" and typeof(getrawmetatable(tbl)) == "table" then
+			if typeof(tbl) == "table" and typeof(getrawmetatable(tbl)) == "table" and (not table.find(exemptions, tbl)) then
 				local Mode;
 				local tbl2 = getrawmetatable(tbl)
 
