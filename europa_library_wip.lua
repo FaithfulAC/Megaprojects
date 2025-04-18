@@ -614,7 +614,7 @@ local europa = {
 				local HasName = (FuncName ~= "")
 	
 				-- we can deal with people ACTUALLY referencing instance function members when the commented code above works ;)
-				return (not HasName--[[ and select(2, pcall(coroutine.wrap(obj))) == "Expected ':' not '.' calling member function " .. FuncName]]);
+				return (HasName and select(2, pcall(coroutine.wrap(obj))) == "Expected ':' not '.' calling member function " .. FuncName) or true;
 			end
 			return (typeof(obj) == "table" or type(obj) == "userdata")
 		end
