@@ -607,6 +607,96 @@ local europa = {
 		end))
 	end,
 
+	clearweaktables = function()
+		local CanBeCollected = function(obj)
+			if (typeof(obj) == "function" and iscclosure(obj)) then
+				local FuncName = debug.info(obj, "n")
+				local HasName = (FuncName ~= "")
+	
+				-- we can deal with people ACTUALLY referencing instance function members when the commented code above works ;)
+				return (not HasName--[[ and select(2, pcall(coroutine.wrap(obj))) == "Expected ':' not '.' calling member function " .. FuncName]]);
+			end
+			return (typeof(obj) == "table" or type(obj) == "userdata")
+		end
+														
+		for _, tbl in getgc(true) do
+			if typeof(tbl) == "table" and typeof(getrawmetatable(tbl)) == "table" then
+				local Mode;
+				local tbl2 = getrawmetatable(tbl)
+
+				if typeof(rawget(tbl2, "__mode")) == "string" then
+					local temp = string.split(rawget(tbl2, "__mode"), "\0")[1]
+	
+					if string.find(temp, "v") and string.find(temp, "k") then
+						Mode = "kv"
+					elseif string.find(temp, "v") then
+						Mode = "v"
+					elseif string.find(temp, "k") then
+						Mode = "k"
+					end
+				end
+	
+				if Mode then
+					task.spawn(function()
+						if Mode == "kv" then
+							for i, v in pairs(tbl) do
+								if
+									CanBeCollected(i)
+									or -- i previously had this as (and) which was not accurate smh
+									CanBeCollected(v)
+								then
+									local wasfrozen = isreadonly(tbl)
+									if wasfrozen and setreadonly then
+										setreadonly(tbl, false)
+									end
+	
+									rawset(tbl, i, nil)
+	
+									if wasfrozen and setreadonly then
+										setreadonly(tbl, true)
+									end
+									i, v = nil, nil
+								end
+							end
+						elseif Mode == "v" then
+							for i, v in pairs(tbl) do
+								if CanBeCollected(v) then
+									local wasfrozen = isreadonly(tbl)
+									if wasfrozen and setreadonly then
+										setreadonly(tbl, false)
+									end
+	
+									rawset(tbl, i, nil)
+	
+									if wasfrozen and setreadonly then
+										setreadonly(tbl, true)
+									end
+									i, v = nil, nil
+								end
+							end
+						elseif Mode == "k" then
+							for i, v in pairs(tbl) do
+								if CanBeCollected(i) then
+									local wasfrozen = isreadonly(tbl)
+									if wasfrozen and setreadonly then
+										setreadonly(tbl, false)
+									end
+	
+									rawset(tbl, i, nil)
+	
+									if wasfrozen and setreadonly then
+										setreadonly(tbl, true)
+									end
+									i, v = nil, nil
+								end
+							end
+						end
+					end)
+				end
+			end
+		end
+	end,
+
 	clientran = function(scr: Instance)
 		return scr.ClassName == "LocalScript" or (scr.ClassName == "Script" and (scr.RunContext == Enum.RunContext.Client or scr.RunContext == Enum.RunContext.Legacy))
 	end,
