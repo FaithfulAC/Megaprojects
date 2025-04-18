@@ -609,12 +609,12 @@ local europa = {
 
 	clearweaktables = function()
 		local CanBeCollected = function(obj)
-			if (typeof(obj) == "function" and iscclosure(obj)) then
+			if (typeof(obj) == "function" and iscclosure(obj) and not isourclosure(obj)) then
 				local FuncName = debug.info(obj, "n")
 				local HasName = (FuncName ~= "")
 	
 				-- we can deal with people ACTUALLY referencing instance function members when the commented code above works ;)
-				return (HasName and select(2, pcall(coroutine.wrap(obj))) == "Expected ':' not '.' calling member function " .. FuncName) or true;
+				return (HasName and select(2, pcall(coroutine.wrap(obj))) == "Expected ':' not '.' calling member function " .. FuncName);
 			end
 			return (typeof(obj) == "table" or type(obj) == "userdata")
 		end
