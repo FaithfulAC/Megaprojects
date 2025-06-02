@@ -976,7 +976,7 @@ local europa = {
 		local res = recursivesearch(tbl, 1)
 		if hitLimit then
 			-- returns false but returns an extra value to indicate that it hit the limit
-			return false, "Max lua stack size reached"
+			return false, "HIT_LIMIT"
 		end
 
 		-- returns whatever __tostring is, should it not be false
