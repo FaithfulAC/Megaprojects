@@ -143,16 +143,16 @@ local europa = {
 
 	disableandcall = function(tbl, fnc)
 		local temp = {}
-		
+
 		for i, v in pairs(tbl) do
 			for _, conn in next, getconnections(v) do
 				if select(2, pcall(function() return conn.Connected end)) == false then continue end
 				conn:Disable()
 			end
-			
+
 			table.insert(temp, v)
 		end
-		
+
 		for _, signal in pairs(temp) do
 			local extra;
 			extra = signal:Connect(function()
@@ -161,12 +161,12 @@ local europa = {
 						conn:Enable()
 					end
 				end
-				
+
 				extra:Disconnect()
 				extra = nil
 			end)
 		end
-		
+
 		fnc()
 		task.delay(task.wait(), function()
 			table.clear(temp)
@@ -449,7 +449,7 @@ local europa = {
 			GetFocusedTextBox = true
 		}, ins)
 	end,
-	
+
 	hookui2d = if not (hookmetamethod and hookfunction) then nil else function(ins)
 		ins = ins or game:GetService("CoreGui").RobloxGui
 		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
@@ -941,27 +941,46 @@ local europa = {
 	end,
 
 	istostringbait = function(tbl, lim)
-		lim = lim or 300-1
+		lim = lim or 300
+		local hitLimit = false
+
 		if typeof(tbl) ~= "table" then
 			return false
 		end
 
 		local function recursivesearch(tbl, int)
+			if int >= lim then
+				hitLimit = true
+				return false
+			end
+
 			for i, newtbl in pairs(tbl) do
-				if (typeof(i) == "table" or typeof(i) == "userdata") and getrawmetatable(i) ~= nil and rawget(getrawmetatable(i), "__tostring") then
-					local a = false
-					for _ in ipairs(newtbl) do a = true end
-					if a then continue end
+				if (typeof(i) == "table" or typeof(i) == "userdata") and typeof(getrawmetatable(i)) == "table" and rawget(getrawmetatable(i), "__tostring") then
+					local isDictionary = true
+					for i, v in ipairs(tbl) do isDictionary = false break end
+					if not isDictionary then continue end
+
 					return rawget(getrawmetatable(i), "__tostring")
 				end
 				if typeof(newtbl) == "table" and int < lim then
-					return recursivesearch(newtbl, int+1)
+					local res = recursivesearch(newtbl, int+1)
+					if res then
+						return res
+					end
 				end
 			end
-			if int >= lim then return false end
+
+			return false
 		end
 
-		return recursivesearch(tbl, 1)
+		local res = recursivesearch(tbl, 1)
+		if hitLimit then
+			-- returns false but returns an extra value to indicate that it hit the limit
+			return false, "Max lua stack size reached"
+		end
+
+		-- returns whatever __tostring is, should it not be false
+		return res
 	end,
 
 	antikick = if not (hookmetamethod and hookfunction) then nil else function(yield: boolean) -- default is false
