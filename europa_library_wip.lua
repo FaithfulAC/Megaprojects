@@ -142,21 +142,37 @@ local europa = {
 	end,
 
 	disableandcall = function(tbl, fnc)
+		local temp = {}
+		
 		for i, v in pairs(tbl) do
-			if select(2, pcall(function() return v.Enabled end)) == true then table.remove(tbl, i) end
-
 			for _, conn in next, getconnections(v) do
+				if select(2, pcall(function() return conn.Connected end)) == false then continue end
 				conn:Disable()
 			end
+			
+			table.insert(temp, v)
 		end
-		fnc()
-		for i, v in pairs(tbl) do
-			for _, conn in next, getconnections(v) do
-				conn:Enable()
-			end
-		end
-	end,
+		
+		for _, signal in pairs(temp) do
+			local extra;
+			extra = signal:Connect(function()
+				for _, conn in next, getconnections(signal) do
+					if select(2, pcall(function() return conn.Enabled end)) == false then
+						conn:Enable()
+					end
+				end
 				
+				extra:Disconnect()
+				extra = nil
+			end)
+		end
+		
+		fnc()
+		task.delay(task.wait(), function()
+			table.clear(temp)
+		end)
+	end,
+
 	firetouchinterest = firetouchinterest or function(part, opart, numtype)
 		if numtype == 1 then
 			return nil; -- this fti implementation will only operate on 0 because it already does a TouchEnded firing
@@ -433,6 +449,14 @@ local europa = {
 			GetFocusedTextBox = true
 		}, ins)
 	end,
+	
+	hookui2d = if not (hookmetamethod and hookfunction) then nil else function(ins)
+		ins = ins or game:GetService("CoreGui").RobloxGui
+		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
+			UI2DDrawcallCount = true,
+			UI2DTriangleCount = true
+		}, ins)
+	end,
 
 	getmem = function()
 		return game:GetService("Stats"):GetTotalMemoryUsageMb()
@@ -470,16 +494,13 @@ local europa = {
 			getgenv().memtagguifunc = game:GetService("RunService").Heartbeat:Connect(function()
 				for i = 1, 10 do
 					local frame = Instance.new("Frame")
-					task.spawn(function()
-						task.wait(1)
-						frame:Destroy()
-					end)
+					task.delay(1, frame.Destroy, frame)
 				end
 			end)
 		end
 	end,
 
-	isalive = isalive or function(): boolean -- thank u electron for the idea :))))))))))
+	isalive = isalive or function(): boolean -- thank u electron (now volcano) for the idea :))))))))))
 		return game:GetService("Stats").DataSendKbps ~= 0 and game:GetService("Stats").DataReceiveKbps ~= 0
 	end,
 
@@ -599,7 +620,7 @@ local europa = {
 				typeof(self) == "RBXScriptConnection" and
 				((signal ~= nil and conncache ~= nil and #conncache > 0 and table.find(conncache, self)) or true) and
 				typeof(prop) == "string" and
-					string.gsub(string.split(prop, "\0")[1], "^%u", string.lower) == "connected"
+				string.gsub(string.split(prop, "\0")[1], "^%u", string.lower) == "connected"
 			then
 				return true
 			end
@@ -615,13 +636,13 @@ local europa = {
 			if (typeof(obj) == "function" and iscclosure(obj) and not isourclosure(obj)) then
 				local FuncName = debug.info(obj, "n")
 				local HasName = (FuncName ~= "")
-	
+
 				-- we can deal with people ACTUALLY referencing instance function members when the commented code above works ;)
 				return (HasName and select(2, pcall(coroutine.wrap(obj))) == "Expected ':' not '.' calling member function " .. FuncName);
 			end
 			return (typeof(obj) == "table" or type(obj) == "userdata")
 		end
-														
+
 		for _, tbl in getgc(true) do
 			if typeof(tbl) == "table" and typeof(getrawmetatable(tbl)) == "table" and ((typeof(exemptions) == "table" and (not table.find(exemptions, tbl))) or typeof(exemptions) == "function" and exemptions(tbl)) then
 				local Mode;
@@ -629,7 +650,7 @@ local europa = {
 
 				if typeof(rawget(tbl2, "__mode")) == "string" then
 					local temp = string.split(rawget(tbl2, "__mode"), "\0")[1]
-	
+
 					if string.find(temp, "v") and string.find(temp, "k") then
 						Mode = "kv"
 					elseif string.find(temp, "v") then
@@ -638,7 +659,7 @@ local europa = {
 						Mode = "k"
 					end
 				end
-	
+
 				if Mode then
 					task.spawn(function()
 						if Mode == "kv" then
@@ -652,9 +673,9 @@ local europa = {
 									if wasfrozen and setreadonly then
 										setreadonly(tbl, false)
 									end
-	
+
 									rawset(tbl, i, nil)
-	
+
 									if wasfrozen and setreadonly then
 										setreadonly(tbl, true)
 									end
@@ -668,9 +689,9 @@ local europa = {
 									if wasfrozen and setreadonly then
 										setreadonly(tbl, false)
 									end
-	
+
 									rawset(tbl, i, nil)
-	
+
 									if wasfrozen and setreadonly then
 										setreadonly(tbl, true)
 									end
@@ -684,9 +705,9 @@ local europa = {
 									if wasfrozen and setreadonly then
 										setreadonly(tbl, false)
 									end
-	
+
 									rawset(tbl, i, nil)
-	
+
 									if wasfrozen and setreadonly then
 										setreadonly(tbl, true)
 									end
@@ -777,7 +798,7 @@ local europa = {
 	end,
 
 	safeprint = function(...)
-		return print(safetostring(args))
+		return print((safetostring or europa and europa.safetostring)(args))
 	end,
 
 	getscripts = if not getinstances then nil else getscripts or function()
@@ -929,7 +950,7 @@ local europa = {
 			for i, newtbl in pairs(tbl) do
 				if (typeof(i) == "table" or typeof(i) == "userdata") and getrawmetatable(i) ~= nil and rawget(getrawmetatable(i), "__tostring") then
 					local a = false
-					for _ in ipairs(v) do a = true end
+					for _ in ipairs(newtbl) do a = true end
 					if a then continue end
 					return rawget(getrawmetatable(i), "__tostring")
 				end
