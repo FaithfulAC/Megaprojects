@@ -143,16 +143,16 @@ local europa = {
 
 	disableandcall = function(tbl, fnc)
 		local temp = {}
-
+		
 		for i, v in pairs(tbl) do
 			for _, conn in next, getconnections(v) do
 				if select(2, pcall(function() return conn.Connected end)) == false then continue end
 				conn:Disable()
 			end
-
+			
 			table.insert(temp, v)
 		end
-
+		
 		for _, signal in pairs(temp) do
 			local extra;
 			extra = signal:Connect(function()
@@ -161,12 +161,12 @@ local europa = {
 						conn:Enable()
 					end
 				end
-
+				
 				extra:Disconnect()
 				extra = nil
 			end)
 		end
-
+		
 		fnc()
 		task.delay(task.wait(), function()
 			table.clear(temp)
@@ -449,7 +449,7 @@ local europa = {
 			GetFocusedTextBox = true
 		}, ins)
 	end,
-
+	
 	hookui2d = if not (hookmetamethod and hookfunction) then nil else function(ins)
 		ins = ins or game:GetService("CoreGui").RobloxGui
 		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/main/true-secure-dex-bypasses.lua", {
@@ -940,9 +940,19 @@ local europa = {
 		return a.Parent == nil
 	end,
 
-	istostringbait = function(tbl, lim)
+	istostringbait = function(tbl, lim, temprefs)
+		--[[
+			proper way to use this would be
+			local res, extra = istostringbait(tbl)
+			
+			and if res is not false then use the __tostring it returns to do something
+			otherwise if extra is not nil then that means the table is still prone to erroring
+			when calling an Instance function with it as an argument
+		]]
 		lim = lim or 300
+		temprefs = temprefs or {}
 		local hitLimit = false
+		local isCyclic = false
 
 		if typeof(tbl) ~= "table" then
 			return false
@@ -955,6 +965,11 @@ local europa = {
 			end
 
 			for i, newtbl in pairs(tbl) do
+				if typeof(newtbl) == "table" and table.find(temprefs, newtbl) then
+					isCyclic = true
+					return false
+				end
+
 				if (typeof(i) == "table" or typeof(i) == "userdata") and typeof(getrawmetatable(i)) == "table" and rawget(getrawmetatable(i), "__tostring") then
 					local isDictionary = true
 					for i, v in ipairs(tbl) do isDictionary = false break end
@@ -962,8 +977,10 @@ local europa = {
 
 					return rawget(getrawmetatable(i), "__tostring")
 				end
+
 				if typeof(newtbl) == "table" and int < lim then
-					local res = recursivesearch(newtbl, int+1)
+					table.insert(temprefs, tbl)
+					local res = recursivesearch(newtbl, int+1, temprefs)
 					if res then
 						return res
 					end
@@ -974,12 +991,19 @@ local europa = {
 		end
 
 		local res = recursivesearch(tbl, 1)
+		table.clear(temprefs) -- shouldnt trigger any weaktables anyways since this happens in a millisecond
+
 		if hitLimit then
 			-- returns false but returns an extra value to indicate that it hit the limit
 			return false, "HIT_LIMIT"
 		end
 
-		-- returns whatever __tostring is, should it not be false
+		if isCyclic then
+			-- returns false but returns an extra value to indicate that the table is cyclic
+			return false, "CYCLIC"
+		end
+
+		-- returns whatever __tostring is, otherwise false
 		return res
 	end,
 
