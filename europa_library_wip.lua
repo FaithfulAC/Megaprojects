@@ -940,7 +940,7 @@ local europa = {
 		return a.Parent == nil
 	end,
 
-	istostringbait = function(tbl, lim, temprefs)
+	istostringbait = function(tbl, lim)
 		--[[
 			proper way to use this would be
 			local res, extra = istostringbait(tbl)
@@ -950,7 +950,7 @@ local europa = {
 			when calling an Instance function with it as an argument
 		]]
 		lim = lim or 300
-		temprefs = temprefs or {}
+		local temprefs = {}
 		local hitLimit = false
 		local isCyclic = false
 
@@ -980,7 +980,7 @@ local europa = {
 
 				if typeof(newtbl) == "table" and int < lim then
 					table.insert(temprefs, tbl)
-					local res = recursivesearch(newtbl, int+1, temprefs)
+					local res = recursivesearch(newtbl, int+1)
 					if res then
 						return res
 					end
