@@ -1560,6 +1560,13 @@ local europa = {
 		return __load("https://raw.githubusercontent.com/FaithfulAC/universal-stuff/refs/heads/main/true-secure-dex-bypasses.lua", options, ins)
 	end,
 
+	antitp = function()
+		game:GetService("TeleportService"):SetTeleportGui(game)
+		pcall(function() -- will error and any further attempts to teleport will also error due to this one being "in-process"
+			game:GetService("TeleportService"):Teleport(game.PlaceId)
+		end)
+	end
+
 	rj = function()
 		game:GetService("TeleportService"):Teleport(game.PlaceId)
 	end
@@ -1637,6 +1644,7 @@ europa["loadsimplespy"] = europa.loadss
 europa["loadvapev4"] = europa.loadv4
 europa["loadbypasses"], europa["loadtsdexbypasses"], europa["loadtruesecuredexbypasses"] =
 	europa.loadtsdbypasses, europa.loadtsdbypasses, europa.loadtsdbypasses
+europa["antiteleport"] = europa.antitp
 europa["rejoin"] = europa.rj
 
 for i, v in europa do
