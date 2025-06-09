@@ -1561,14 +1561,15 @@ local europa = {
 	end,
 
 	antitp = function()
+		-- wont work if server does TeleportAsync
 		game:GetService("TeleportService"):SetTeleportGui(game)
 		pcall(function() -- will error and any further attempts to teleport will also error due to this one being "in-process"
 			game:GetService("TeleportService"):Teleport(game.PlaceId)
 		end)
-	end
+	end,
 
-	rj = function()
-		game:GetService("TeleportService"):Teleport(game.PlaceId)
+	rj = function(tpdata, gui)
+		game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer, tpdata, gui)
 	end
 }
 getgenv().europa = europa
