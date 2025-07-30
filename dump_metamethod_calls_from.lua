@@ -48,6 +48,10 @@ local h; h = hookmetamethod(self, metamethod, function(...)
 					stuff ..= tostring(i) .. ": " .. safetostring(v) .. "\n"
 				end
 			end
+			stuff ..= "\n> Calling Stack:\n\n"
+			for i, v in getstack(3) do
+				stuff ..= tostring(i) .. ": " .. safetostring(v) .. "\n"
+			end
 		end
 
 		if stuff == "" then return h(...) end
