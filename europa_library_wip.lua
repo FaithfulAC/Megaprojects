@@ -1146,8 +1146,8 @@ local europa = {
 		return game:GetService("ScriptContext"):SetTimeout(1)
 	end,
 
-	ls = function(url: string)
-		return loadstring(game:HttpGet(url))()
+	ls = function(url: string, ...)
+		return loadstring(game:HttpGet(url))(...)
 	end,
 
 	hookinscount = if not (hookmetamethod and hookfunction) then nil else function()
