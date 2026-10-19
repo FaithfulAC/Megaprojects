@@ -1568,8 +1568,11 @@ local europa = {
 		end)
 	end,
 
-	rj = function(tpdata, gui)
-		game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer, tpdata, gui)
+	rj = function(usePlaceInstance, tpdata)
+		if usePlaceInstance then
+			game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer, tpdata)
+		end
+		game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer, tpdata)
 	end
 }
 getgenv().europa = europa
